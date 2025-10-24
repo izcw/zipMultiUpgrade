@@ -1,19 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isLib = mode === 'lib'
   
   if (isLib) {
-    // 库模式配置
     return {
-      plugins: [
-        vue(),
-        vueDevTools(),
-      ],
+      plugins: [vue()],
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -27,32 +21,34 @@ export default defineConfig(({ mode }) => {
           formats: ['es', 'umd']
         },
         rollupOptions: {
-          // 确保外部化处理那些你不想打包进库的依赖
-          external: ['vue', 'element-plus', 'jszip'],
+          external: ['vue','jszip'],
           output: {
-            // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
             globals: {
               vue: 'Vue',
-              'element-plus': 'ElementPlus',
               jszip: 'JSZip'
             },
-            // 配置最小化
+            exports: 'named',
             compact: true
           }
         },
-        // 清空输出目录
         emptyOutDir: true,
-        // 输出目录
-        outDir: 'dist'
+        outDir: 'dist',
+        minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true,
+            pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+          },
+          format: {
+            comments: false
+          }
+        }
       }
     }
   } else {
-    // 开发模式配置
     return {
-      plugins: [
-        vue(),
-        vueDevTools(),
-      ],
+      plugins: [vue()],
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))

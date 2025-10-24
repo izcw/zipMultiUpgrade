@@ -1,9 +1,11 @@
-// src/upgradePackage/install.js
-import UpgradePackage from './index.vue'
+// src\index.js
+import UpgradePackage from '@/components/UpgradePackage/index.vue'
+import ProgressLog from '@/components/ProgressLog/index.vue'
 
 // 定义 install 方法
 const install = (app, options = {}) => {
   app.component('UpgradePackage', UpgradePackage)
+  app.component('ProgressLog', ProgressLog)
   
   // 可以在这里提供全局配置
   if (options.config) {
@@ -16,11 +18,12 @@ if (typeof window !== 'undefined' && window.Vue) {
   install(window.Vue)
 }
 
-// 导出组件和 install 方法
-export default {
+// 命名导出
+export {
   install,
-  component: UpgradePackage
+  UpgradePackage,
+  ProgressLog
 }
 
-// 单独导出组件，支持按需引入
-export { UpgradePackage }
+// 默认导出组件
+export default UpgradePackage

@@ -1,7 +1,7 @@
 // lib-entry.js
-import { UpgradePackage } from './src/upgradePackage/install.js'
+import { UpgradePackage,ProgressLog } from '@/index.js'
 
-const components = [UpgradePackage]
+const components = [UpgradePackage,ProgressLog]
 
 // 定义 install 方法
 const install = (app, options = {}) => {
@@ -20,9 +20,12 @@ if (typeof window !== 'undefined' && window.Vue) {
   install(window.Vue)
 }
 
-export default {
+// 只使用命名导出，避免混合导出
+export {
   install,
-  UpgradePackage
+  UpgradePackage,
+  ProgressLog
 }
 
-export { UpgradePackage }
+// 默认导出 install 方法，符合 Vue 插件标准
+export default install

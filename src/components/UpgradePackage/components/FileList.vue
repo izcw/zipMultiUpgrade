@@ -1,3 +1,4 @@
+<!-- src\components\UpgradePackage\components\FileList.vue -->
 <template>
     <div class="file-list-container">
         <div class="file-list" :class="{ 'with-details': showDetails }">

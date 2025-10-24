@@ -1,3 +1,4 @@
+<!-- src\components\ProgressLog\index.vue -->
 <template>
     <div class="progress-log-section">
         <div class="progress-container">
@@ -26,12 +27,15 @@
 
 <script setup>
 import { ref, watch, onUnmounted, nextTick } from 'vue'
-import { useMockUpgrade } from '../mockUpgrade'
 
-const props = defineProps({ files: { type: Array, default: () => [] } })
+const props = defineProps({ 
+    files: { type: Array, default: () => [] },
+    upgradeFunction: { type: Function, required: true }  // 新增升级函数prop
+})
 const emit = defineEmits(['all-done'])
 
-const { mockSingleFileUpgrade } = useMockUpgrade()
+// 使用传入的升级函数
+const { mockSingleFileUpgrade } = props.upgradeFunction()
 
 const logs = ref([])
 const currentProgress = ref(0)
@@ -64,7 +68,6 @@ function stopCountDown() {
 
 const addLog = msg => {
     const t = new Date().toLocaleTimeString()
-    // logs.value.push(`[${t}] ${msg}`)
     logs.value.push({ time: t, msg: msg })
     if (logs.value.length > 200) logs.value.shift()
     nextTick(() => {
@@ -175,9 +178,14 @@ onUnmounted(() => {
     logs.value = []
     stopCountDown()
 })
+
+defineOptions({
+    name: 'ProgressLog'
+})
 </script>
 
 <style scoped lang="scss">
+/* 样式保持不变 */
 .progress-log-section {
     padding-top: 1rem;
 }
@@ -249,7 +257,6 @@ onUnmounted(() => {
     padding: .5rem;
     position: relative;
 
-
     &::-webkit-scrollbar {
         width: 4px;
         height: 12px;
@@ -276,12 +283,8 @@ onUnmounted(() => {
 
 .log-entry {
     padding: 2px 0;
-    // white-space: nowrap;
-    // overflow: hidden;
-    // text-overflow: ellipsis;
     display: flex;
     align-items: flex-start;
-
     word-wrap: break-word;
     word-break: break-all;
 
@@ -308,7 +311,6 @@ onUnmounted(() => {
 
     & .log-summary {
         color: #ffd43b;
-        /* 统计信息使用黄色 */
         font-weight: bold;
     }
 }

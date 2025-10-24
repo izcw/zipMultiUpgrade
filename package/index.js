@@ -1,8 +1,10 @@
 // package/index.js
-import UpgradePackage from '../src/upgradePackage'
+import UpgradePackage from '@/components/UpgradePackage/index.vue'
+import ProgressLog from '@/components/ProgressLog/index.vue'
 
 const components = [
-  UpgradePackage
+  UpgradePackage,
+  ProgressLog
 ]
 
 // 定义 install 方法
@@ -19,5 +21,6 @@ if (typeof window !== 'undefined' && window.Vue) {
 
 export default {
   install,
-  UpgradePackage
+  UpgradePackage,
+  ProgressLog
 }
