@@ -1,0 +1,23 @@
+// package/index.js
+import UpgradePackage from '../src/upgradePackage'
+
+const components = [
+  UpgradePackage
+]
+
+// 定义 install 方法
+const install = function(Vue) {
+  components.forEach(component => {
+    Vue.component(component.name, component)
+  })
+}
+
+// 自动注册
+if (typeof window !== 'undefined' && window.Vue) {
+  install(window.Vue)
+}
+
+export default {
+  install,
+  UpgradePackage
+}

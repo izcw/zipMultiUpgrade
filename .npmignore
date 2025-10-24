@@ -1,0 +1,21 @@
+# 开发文件
+src/
+public/
+*.config.js
+lib-entry.js
+node_modules/
+*.local
+.env
+.DS_Store
+*.log
+
+# 构建文件（除了 dist）
+!dist/
+
+# IDE 文件
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore

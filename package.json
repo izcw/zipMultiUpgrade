@@ -1,0 +1,49 @@
+{
+  "name": "@izcw404/upgrade-package-manager",
+  "version": "1.0.0",
+  "description": "A configurable Vue 3 component for managing firmware upgrade packages",
+  "type": "module",
+  "main": "dist/upgrade-package-manager.umd.js",
+  "module": "dist/upgrade-package-manager.es.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "vite build --mode lib",
+    "build:watch": "nodemon --watch src --ext vue,js,ts --exec npm run build:lib",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "dependencies": {
+    "element-plus": "^2.11.5",
+    "jszip": "^3.10.1",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "nodemon": "^3.1.10",
+    "sass-embedded": "^1.93.2",
+    "vite": "^7.1.7",
+    "vite-plugin-vue-devtools": "^8.0.2"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0",
+    "element-plus": "^2.11.0",
+    "jszip": "^3.10.0"
+  },
+  "keywords": [
+    "vue3",
+    "firmware",
+    "upgrade",
+    "package",
+    "zip",
+    "component"
+  ],
+  "author": "izcw",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "your-repo-url"
+  }
+}
