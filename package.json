@@ -1,12 +1,21 @@
 {
   "name": "@izcw404/upgrade-package-manager",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A configurable Vue 3 component for managing firmware upgrade packages",
   "type": "module",
   "main": "dist/upgrade-package-manager.umd.js",
   "module": "dist/upgrade-package-manager.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/upgrade-package-manager.es.js",
+      "require": "./dist/upgrade-package-manager.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": "./dist/upgrade-package-manager.css"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "dev": "vite",

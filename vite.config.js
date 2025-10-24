@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   const isLib = mode === 'lib'
@@ -15,20 +16,26 @@ export default defineConfig(({ mode }) => {
       },
       build: {
         lib: {
-          entry: fileURLToPath(new URL('./lib-entry.js', import.meta.url)),
+          // 直接使用 src/index.js 作为入口
+          entry: resolve(__dirname, 'src/index.js'),
           name: 'UpgradePackageManager',
           fileName: (format) => `upgrade-package-manager.${format}.js`,
-          formats: ['es', 'umd']
+          formats: ['es', 'umd', 'cjs']
         },
         rollupOptions: {
-          external: ['vue','jszip'],
+          // 外部化依赖
+          external: ['vue', 'jszip'],
           output: {
             globals: {
               vue: 'Vue',
               jszip: 'JSZip'
             },
             exports: 'named',
-            compact: true
+            // 确保 CSS 也被打包
+            assetFileNames: (assetInfo) => {
+              if (assetInfo.name === 'style.css') return 'upgrade-package-manager.css'
+              return assetInfo.name
+            }
           }
         },
         emptyOutDir: true,
@@ -38,12 +45,13 @@ export default defineConfig(({ mode }) => {
           compress: {
             drop_console: true,
             drop_debugger: true,
-            pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
           },
           format: {
             comments: false
           }
-        }
+        },
+        // 生成源映射
+        sourcemap: true
       }
     }
   } else {
@@ -54,6 +62,10 @@ export default defineConfig(({ mode }) => {
           '@': fileURLToPath(new URL('./src', import.meta.url))
         },
       },
+      build: {
+        // 开发模式构建配置
+        sourcemap: true
+      }
     }
   }
 })

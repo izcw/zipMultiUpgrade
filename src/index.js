@@ -1,6 +1,5 @@
 // src\index.js
-import UpgradePackage from '@/components/UpgradePackage/index.vue'
-import ProgressLog from '@/components/ProgressLog/index.vue'
+import  { UpgradePackage, ProgressLog } from './components'
 
 // 定义 install 方法
 const install = (app, options = {}) => {
