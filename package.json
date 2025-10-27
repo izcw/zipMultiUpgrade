@@ -1,22 +1,19 @@
 {
-  "name": "@izcw404/upgrade-package-manager",
-  "version": "1.0.4",
+  "name": "zip-multi-upgrade",
+  "version": "1.0.1",
   "description": "A configurable Vue 3 component for managing firmware upgrade packages",
   "type": "module",
-  "main": "dist/upgrade-package-manager.umd.js",
-  "module": "dist/upgrade-package-manager.es.js",
+  "main": "dist/zip-multi-upgrade.es.js",
+  "module": "dist/zip-multi-upgrade.es.js",
   "exports": {
     ".": {
-      "import": "./dist/upgrade-package-manager.es.js",
-      "require": "./dist/upgrade-package-manager.umd.js",
+      "import": "./dist/zip-multi-upgrade.es.js",
       "types": "./dist/index.d.ts"
     },
-    "./style.css": "./dist/upgrade-package-manager.css"
+    "./index.css": "./dist/index.css"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
     "build": "vite build",

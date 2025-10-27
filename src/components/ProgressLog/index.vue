@@ -17,25 +17,56 @@
                 <span style="white-space: nowrap;">[{{ log.time }}]&ensp;</span>
                 <span :class="getLogClass(log)">{{ log.msg }}</span>
             </div>
-
             <div v-if="countDown > 0" class="log-entry count-down">
-                下文件倒计时：{{ countDown }} 秒
+                {{ countDown }}
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, nextTick } from 'vue'
+import { ref, watch, computed, onUnmounted, nextTick } from 'vue'
 
-const props = defineProps({ 
+const props = defineProps({
     files: { type: Array, default: () => [] },
-    upgradeFunction: { type: Function, required: true }  // 新增升级函数prop
+    upgradeFunction: { type: Function, required: true },  // 新增升级函数prop
+    config: {
+        type: Object,
+        default: () => ({})
+    }
 })
+
+// 默认配置
+const defaultConfig = {
+    // 预置文本
+    waitText: '秒后处理下一个文件...',
+    anomalousText: '发生异常，停止升级：',
+    executeFinishText: '==== 全部执行完成',
+    timeConsumingText: '总耗时：',
+    successText: '成功',
+    errorText: '失败',
+
+    // 颜色规则
+    logRules: [
+        { test: /=====/i, style: 'orange-bold' },
+        { test: /[✗]|error|失败(?!.*=====)/i, style: 'error' },
+        { test: /[✓]|success/i, style: 'green' },
+        { test: /\|\s*→\s*(进度|progress)：/i, style: 'blue' },
+        { test: /→/i, style: 'blue' },   // ← 你要的这条
+        { test: /\+/i, style: 'orange-bold' }
+    ]
+}
+
+// 合并配置
+const config = computed(() => ({
+    ...defaultConfig,
+    ...props.config
+}))
+
 const emit = defineEmits(['all-done'])
 
 // 使用传入的升级函数
-const { mockSingleFileUpgrade } = props.upgradeFunction()
+const  mockSingleFileUpgrade  = props.upgradeFunction
 
 const logs = ref([])
 const currentProgress = ref(0)
@@ -78,21 +109,18 @@ const addLog = msg => {
 }
 
 const getLogClass = (log) => {
-    log = log.msg
-    console.log(log);
+    const msg = log.msg ?? log
+    const rules = config.value.logRules
 
-    // 先检查是否是统计日志（包含"====="的特殊格式）
-    if (log.includes('=====') && (log.includes('成功') || log.includes('失败')) || (log.includes('success') || log.includes('error'))) {
-        return 'log-summary'
+    for (const { test, style } of rules) {
+        const hit = test instanceof RegExp ? test.test(msg)
+            : typeof test === 'string' ? msg.includes(test)
+                : typeof test === 'function' ? test(msg)
+                    : false
+        if (hit) return style
     }
-    if (log.includes('✗') || log.includes('error') || (log.includes('失败') && !log.includes('====='))) return 'log-error'
-    if (log.includes('✓') || log.includes('success')) return 'log-success'
-    if (log.includes('| → 进度：') || log.includes('| → progress：')) return 'log-progress'
-    if (log.includes('→')) return 'log-process'
-    if (log.includes('+')) return 'log-start'
-    return ''
+    return 'black'
 }
-
 async function upgradeFile(file, currentIdx) {
     // 每个文件占据的进度范围
     const progressPerFile = 100 / props.files.length
@@ -113,6 +141,9 @@ async function upgradeFile(file, currentIdx) {
 async function runUpgrade() {
     if (!props.files.length) return
 
+    console.log(props.files,"halo");
+    
+
     const startT = Date.now()
     currentProgress.value = 0
     logs.value = []
@@ -123,8 +154,6 @@ async function runUpgrade() {
     // 添加成功失败统计
     let successCount = 0
     let failCount = 0
-
-    addLog(`===== 开始批量升级，共 ${props.files.length} 个文件 =====`)
 
     try {
         for (let i = 0; i < props.files.length; i++) {
@@ -143,7 +172,7 @@ async function runUpgrade() {
 
             if (!isLast) {
                 const waitSeconds = INTERVAL_MS / 1000
-                addLog(`等待 ${waitSeconds} 秒后处理下一个文件...`)
+                addLog(`${waitSeconds} ${config.value.waitText}`)
                 startCountDown(waitSeconds)
                 await new Promise(resolve => {
                     const timer = setInterval(() => {
@@ -160,13 +189,14 @@ async function runUpgrade() {
         totalTime.value = ((endT - startT) / 1000).toFixed(2)
         currentProgress.value = 100
         currentIndex.value = props.files.length  // 设置为文件总数
-        addLog(`===== 全部执行完毕(${props.files.length}/${props.files.length}) 总耗时：${totalTime.value} 秒 =====`)
+        addLog(`${config.value.executeFinishText}(${props.files.length}/${props.files.length})`)
+        addLog(`${config.value.timeConsumingText}${totalTime.value} s`)
         // 添加成功失败统计信息
-        addLog(`===== 成功 ${successCount} 个，失败 ${failCount} 个 =====`)
+        addLog(`${config.value.successText}(${successCount}) ，${config.value.errorText}(${failCount})`)
         emit('all-done')
 
     } catch (error) {
-        addLog(`!!! 升级过程发生异常：${error.message}`)
+        addLog(`${config.value.anomalousText}${error.message}`)
     } finally {
         stopCountDown()
     }
@@ -185,6 +215,15 @@ defineOptions({
 </script>
 
 <style scoped lang="scss">
+$black: #000000; // 黑色
+$white: #ffffff; // 白色色
+$grey: #A9AEB8; // 灰色
+$blue: #57A9FB; // 蓝色
+$green: #23C343; // 绿色
+$error: #F76560; // 红色
+$orange: #FF9A2E; // 橙色
+$purple: #8D4EDA; // 紫色
+
 /* 样式保持不变 */
 .progress-log-section {
     padding-top: 1rem;
@@ -197,7 +236,7 @@ defineOptions({
 .progress-bar {
     width: 100%;
     height: 20px;
-    background: #454F28;
+    background: #BFBFBF;
     border-radius: 10px;
     position: relative;
     overflow: hidden;
@@ -217,7 +256,7 @@ defineOptions({
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(45deg, #A2C33F, #8AB033);
+    background: linear-gradient(45deg, #3491FA, #57A9FB);
     border-radius: 10px;
     transition: width .3s;
     position: relative;
@@ -250,11 +289,8 @@ defineOptions({
 .log-container {
     max-height: 200px;
     overflow-y: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: .75rem;
-    background: rgba(0, 0, 0, .2);
-    border-radius: 4px;
-    padding: .5rem;
+    font-size: 12px;
+    padding: 10px;
     position: relative;
 
     &::-webkit-scrollbar {
@@ -276,7 +312,7 @@ defineOptions({
     }
 
     .count-down {
-        color: #ff0;
+        color: $orange;
         font-weight: bold;
     }
 }
@@ -288,30 +324,80 @@ defineOptions({
     word-wrap: break-word;
     word-break: break-all;
 
-    & .log-error {
-        color: #ff6b6b;
+
+
+
+    & .black {
+        color: $black;
+
+        &-bold {
+            color: $black;
+            font-weight: bold;
+        }
     }
 
-    & .log-success {
-        color: #51cf66;
+    & .white {
+        color: $white;
+
+        &-bold {
+            color: $white;
+            font-weight: bold;
+        }
     }
 
-    & .log-progress {
-        color: #74c0fc;
+    & .grey {
+        color: $grey;
+
+        &-bold {
+            color: $grey;
+            font-weight: bold;
+        }
     }
 
-    & .log-process {
-        color: #4dabf7;
+    & .blue {
+        color: $blue;
+
+        &-bold {
+            color: $blue;
+            font-weight: bold;
+        }
     }
 
-    & .log-start {
-        color: #ffd43b;
-        font-weight: bold;
+    & .green {
+        color: $green;
+
+        &-bold {
+            color: $green;
+            font-weight: bold;
+        }
     }
 
-    & .log-summary {
-        color: #ffd43b;
-        font-weight: bold;
+    & .error {
+        color: $error;
+
+        &-bold {
+            color: $error;
+            font-weight: bold;
+        }
+    }
+
+    & .orange {
+        color: $orange;
+
+        &-bold {
+            color: $orange;
+            font-weight: bold;
+        }
+    }
+
+
+    & .purple {
+        color: $purple;
+
+        &-bold {
+            color: $purple;
+            font-weight: bold;
+        }
     }
 }
 </style>

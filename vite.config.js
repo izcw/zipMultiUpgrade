@@ -8,34 +8,37 @@ export default defineConfig(({ mode }) => {
   
   if (isLib) {
     return {
-      plugins: [vue()],
+      plugins: [
+        vue(),
+        // 启用构建分析（建议仅在需要分析时启用，避免每次构建都打开）
+        process.env.ANALYZE ? visualizer({
+          open: true, // 打包完成后自动打开分析页面
+          gzipSize: true, // 显示gzip后的大小
+          filename: 'dist/stats.html' // 将分析报告输出到dist目录
+        }) : null
+      ].filter(Boolean), // 过滤掉为null的插件
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))
         },
       },
+      // 新增：依赖预构建优化
+      optimizeDeps: {
+        include: ['jszip'] // 如果你的库源码中使用了jszip的ESM模块，可以在此预构建
+      },
       build: {
         lib: {
-          // 直接使用 src/index.js 作为入口
           entry: resolve(__dirname, 'src/index.js'),
-          name: 'UpgradePackageManager',
-          fileName: (format) => `upgrade-package-manager.${format}.js`,
-          formats: ['es', 'umd', 'cjs']
+          name: 'ZipMultiUpgrade',
+          formats: ['es'], // 仅输出ES模块格式，利于Tree-shaking
+          fileName: () => 'zip-multi-upgrade.es.js'
         },
         rollupOptions: {
-          // 外部化依赖
           external: ['vue', 'jszip'],
           output: {
-            globals: {
-              vue: 'Vue',
-              jszip: 'JSZip'
-            },
-            exports: 'named',
-            // 确保 CSS 也被打包
-            assetFileNames: (assetInfo) => {
-              if (assetInfo.name === 'style.css') return 'upgrade-package-manager.css'
-              return assetInfo.name
-            }
+            assetFileNames: 'index.css'
+            // 可以考虑为chunk文件也命名
+            // chunkFileNames: 'chunks/[name]-[hash].js',
           }
         },
         emptyOutDir: true,
@@ -45,13 +48,17 @@ export default defineConfig(({ mode }) => {
           compress: {
             drop_console: true,
             drop_debugger: true,
+            pure_funcs: ['console.log'] // 明确移除console.log，即使忘记删除console也行
           },
           format: {
             comments: false
+          },
+          // 新增：混淆选项，可进一步减小体积
+          mangle: {
+            properties: false // 库模式不建议混淆属性名，以免影响外部使用
           }
         },
-        // 生成源映射
-        sourcemap: true
+        sourcemap: true,
       }
     }
   } else {

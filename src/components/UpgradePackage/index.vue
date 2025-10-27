@@ -7,25 +7,34 @@
                 <div class="file-upload-button">
                     <input class="file-input" type="file" :accept="acceptExt" @change="onFileChange"
                         ref="fileInputRef" />
-                    <svg t="1761289411334" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" p-id="8752" width="32" height="32">
-                        <path
-                            d="M867.705263 485.519719v359.298246h-718.596491v-359.298246h-71.859649v395.22807c0 19.761404 16.168421 35.929825 35.929824 35.929825h790.456141c19.761404 0 35.929825-16.168421 35.929824-35.929825v-395.22807h-71.859649z"
-                            p-id="8753" fill="currentColor"></path>
-                        <path
-                            d="M472.477193 212.453053v452.715789h71.859649v-452.715789l154.498246 154.498245 50.301754-50.301754-215.578947-215.578948c-14.37193-14.37193-35.929825-14.37193-50.301755 0l-215.578947 215.578948 50.301754 50.301754 154.498246-154.498245z"
-                            p-id="8754" fill="currentColor"></path>
-                    </svg>
+                    <div class="icon">
+                        <slot name="upload-icon">
+                            <svg t="1761289411334" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="8752" width="32" height="32">
+                                <path
+                                    d="M867.705263 485.519719v359.298246h-718.596491v-359.298246h-71.859649v395.22807c0 19.761404 16.168421 35.929825 35.929824 35.929825h790.456141c19.761404 0 35.929825-16.168421 35.929824-35.929825v-395.22807h-71.859649z"
+                                    p-id="8753" fill="currentColor"></path>
+                                <path
+                                    d="M472.477193 212.453053v452.715789h71.859649v-452.715789l154.498246 154.498245 50.301754-50.301754-215.578947-215.578948c-14.37193-14.37193-35.929825-14.37193-50.301755 0l-215.578947 215.578948 50.301754 50.301754 154.498246-154.498245z"
+                                    p-id="8754" fill="currentColor"></path>
+                            </svg>
+                        </slot>
+                    </div>
+
                     <p v-if="filezip">{{ filezip.name }} ({{ formatSize(filezip.size) }})</p>
                     <p v-else>点击上传文件</p>
                 </div>
                 <div class="delete" v-if="filezip" @click="clearFiles">
-                    <svg t="1761288962731" class="icon" viewBox="0 0 1025 1024" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" p-id="4671" width="32" height="32">
-                        <path
-                            d="M937.008958 1007.935101L512.072972 583.426523 87.213142 1007.860499c-19.761826 19.736959-51.834578 19.878392-71.663235 0.074602-19.729187-19.7152-19.618838-51.815927 0.105687-71.568428L440.552725 511.932697 15.655594 87.461421c-19.76338-19.736959-19.724525-51.882758 0-71.590187 19.797573-19.77426 51.870325-19.74473 71.667897 0.037301l424.85983 424.433976L937.044705 15.908535c19.799127-19.782031 51.833024-19.782031 71.591741-0.037301 19.834874 19.819332 19.764934 51.741325-0.032638 71.515585L583.739315 511.836336l424.939095 424.500807c19.828657 19.782031 19.828657 51.815927 0.02953 71.552886-19.726079 19.848862-51.864108 19.848862-71.698982 0.045072z"
-                            fill="currentColor" p-id="4672"></path>
-                    </svg>
+                    <div class="icon">
+                        <slot name="delete-icon">
+                            <svg t="1761288962731" class="icon" viewBox="0 0 1025 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="4671" width="32" height="32">
+                                <path
+                                    d="M937.008958 1007.935101L512.072972 583.426523 87.213142 1007.860499c-19.761826 19.736959-51.834578 19.878392-71.663235 0.074602-19.729187-19.7152-19.618838-51.815927 0.105687-71.568428L440.552725 511.932697 15.655594 87.461421c-19.76338-19.736959-19.724525-51.882758 0-71.590187 19.797573-19.77426 51.870325-19.74473 71.667897 0.037301l424.85983 424.433976L937.044705 15.908535c19.799127-19.782031 51.833024-19.782031 71.591741-0.037301 19.834874 19.819332 19.764934 51.741325-0.032638 71.515585L583.739315 511.836336l424.939095 424.500807c19.828657 19.782031 19.828657 51.815927 0.02953 71.552886-19.726079 19.848862-51.864108 19.848862-71.698982 0.045072z"
+                                    fill="currentColor" p-id="4672"></path>
+                            </svg>
+                        </slot>
+                    </div>
                 </div>
             </div>
         </div>
@@ -44,11 +53,12 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted, nextTick, getCurrentInstance, onMounted } from 'vue'
-import JSZip from 'jszip'
+import { loadAsync } from 'jszip'
 import FileList from '@/components/UpgradePackage/components/FileList.vue'
+import { formatSize } from '@/utils/common.js'
 
 // 定义事件
-const emit = defineEmits(['files-ready', 'files-selected', 'panel-closed', 'error'])
+const emit = defineEmits(['files-ready', 'files-selected', 'close', 'error'])
 
 // 默认配置
 const defaultConfig = {
@@ -134,7 +144,6 @@ const zipInstance = ref(null)
 
 /* **************** 计算属性 **************** */
 const hasFiles = computed(() => fileList.value.length > 0)
-const hasPreviewFiles = computed(() => checkedFiles.value.length > 0)
 
 // 计算允许上传的后缀
 const acceptExt = computed(() => {
@@ -167,26 +176,42 @@ const isAllSelected = computed(() => {
 
 // 暴露给使用者的文件数据
 const processedFiles = computed(() => {
-    return sortedPreviewList.value.map(file => ({
-        name: file.name,
-        ext: file.ext,
-        version: file.version,
-        rule: file.rule,
-        size: file.size,
-        cmd: file.cmd,
-        priority: file.priority,
-        needUpgrade: file.needUpgrade,
-        curVersion: file.curVersion,
-        hitRule: file.hitRule,
-        shortName: file.shortName,
-        originalEntry: file.entry,
-        getFileData: async () => {
+    return sortedPreviewList.value.map(file => {
+        // 为每个文件创建一个浏览器原生的 File 对象
+        const createBrowserFile = async () => {
             if (file.entry && zipInstance.value) {
-                return await file.entry.async('uint8array')
+                const uint8Array = await file.entry.async('uint8array')
+                return new File([uint8Array], file.name, {
+                    type: 'application/octet-stream',
+                    lastModified: new Date().getTime()
+                })
             }
             return null
         }
-    }))
+
+        return {
+            name: file.name,
+            ext: file.ext,
+            version: file.version,
+            rule: file.rule,
+            size: file.size,
+            cmd: file.cmd,
+            priority: file.priority,
+            needUpgrade: file.needUpgrade,
+            curVersion: file.curVersion,
+            hitRule: file.hitRule,
+            shortName: file.shortName,
+            // 直接暴露 File 对象，让用户使用更简单
+            File: createBrowserFile(), // 这是一个 Promise，解析后就是浏览器 File 对象
+            // 向后兼容的异步方法
+            getFileData: async () => {
+                if (file.entry && zipInstance.value) {
+                    return await file.entry.async('uint8array')
+                }
+                return null
+            }
+        }
+    })
 })
 
 /* **************** 文件处理 **************** */
@@ -216,9 +241,9 @@ async function onFileChange(e) {
     try {
         await processZipFile(f)
         emit('files-ready', {
-            files: fileList.value,
-            selectedFiles: processedFiles.value,
-            zipFile: f
+            FilesAll: fileList.value,
+            SelectedFiles: processedFiles.value,
+            RawZip: f
         })
     }
     catch (error) {
@@ -229,7 +254,7 @@ async function onFileChange(e) {
 }
 
 async function processZipFile(file) {
-    const zip = await JSZip.loadAsync(await file.arrayBuffer())
+    const zip = await loadAsync(await file.arrayBuffer())
     zipInstance.value = zip
     const files = []
     zip.forEach((path, entry) => {
@@ -326,11 +351,7 @@ function toggleCheck(file) {
     if (i === -1) checkedFiles.value.push(file)
     else checkedFiles.value.splice(i, 1)
 
-    emit('files-selected', {
-        selectedFiles: processedFiles.value,
-        selectedCount: checkedFiles.value.length,
-        totalCount: fileList.value.length
-    })
+    filesSelected()
 }
 
 function toggleSelectAll() {
@@ -344,36 +365,18 @@ function toggleSelectAll() {
         checkedFiles.value.push(...add)
     }
 
-    emit('files-selected', {
-        selectedFiles: processedFiles.value,
-        selectedCount: checkedFiles.value.length,
-        totalCount: fileList.value.length
-    })
+    filesSelected()
 }
 
-/* **************** 文件就绪处理 **************** */
-function handleFileReady() {
-    if (!hasPreviewFiles.value) {
-        showError('请先选择要处理的文件')
-        return
-    }
-
-    emit('files-ready', {
-        files: processedFiles.value,
-        selectedCount: checkedFiles.value.length,
-        zipInstance: zipInstance.value,
-        originalFile: filezip.value
+function filesSelected() {
+    emit('files-selected', {
+        SelectedFiles: processedFiles.value,
+        SelectedCount: checkedFiles.value.length,
+        TotalCount: fileList.value.length
     })
 }
 
 /* **************** 工具 **************** */
-function formatSize(bytes) {
-    if (bytes === 0) return '0 B'
-    const k = 1024, sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.floor(bytes / Math.pow(k, i)) + ' ' + sizes[i]
-}
-
 function showError(msg) {
     emit('error', msg)
 }
@@ -384,7 +387,7 @@ function clearFiles() {
     zipInstance.value = null
     filezip.value = null
     if (fileInputRef.value) fileInputRef.value.value = ''
-    emit('panel-closed')
+    emit('close')
 }
 
 function closePanel() {
@@ -451,7 +454,7 @@ defineExpose({
     closePanel,
     // 状态信息
     fileCount: computed(() => fileList.value.length),
-    selectedCount: computed(() => checkedFiles.value.length),
+    SelectedCount: computed(() => checkedFiles.value.length),
     hasFiles: computed(() => fileList.value.length > 0),
     hasSelectedFiles: computed(() => checkedFiles.value.length > 0),
     // 配置信息
@@ -478,13 +481,6 @@ onUnmounted(() => {
     position: relative;
 }
 
-.section-base {
-    // padding-bottom: 1rem;
-}
-
-.upload-section {
-    @extend .section-base;
-}
 
 .file-upload {
     width: 100%;
@@ -508,12 +504,21 @@ onUnmounted(() => {
         position: relative;
         overflow: hidden;
 
-        svg {
+        .icon {
             width: 20px;
             height: 20px;
             min-width: 20px;
             min-height: 20px;
-            margin-right: 10px;
+            margin-right: 8px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            >* {
+                width: 100%;
+                height: 100%;
+            }
         }
 
         p {
@@ -556,21 +561,28 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        svg {
+        .icon {
             width: 16px;
             height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            >* {
+                width: 100%;
+                height: 100%;
+            }
         }
     }
 
     .delete:hover,
     .delete:active {
-        opacity: 0.7;
+        opacity: 0.5;
     }
 
 }
 
 .file-section {
-    @extend .section-base;
 
     user-select: none;
 
@@ -590,7 +602,6 @@ onUnmounted(() => {
 }
 
 .action-section {
-    @extend .section-base;
     display: flex;
     justify-content: flex-end;
     gap: 1rem;

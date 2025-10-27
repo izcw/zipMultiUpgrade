@@ -22,6 +22,8 @@
 </template>
 
 <script setup>
+import { formatSize } from '@/utils/common.js'
+
 const props = defineProps({
     files: { type: Array, default: () => [] },
     checkedFiles: { type: Array, default: () => [] },
@@ -31,13 +33,6 @@ const emit = defineEmits(['toggle-check'])
 
 // 用箭头函数——自动暴露
 const isChecked = file => props.checkedFiles.includes(file)
-
-const formatSize = bytes => {
-    if (bytes === 0) return '0 B'
-    const k = 1024, sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.floor(bytes / Math.pow(k, i)) + ' ' + sizes[i]
-}
 </script>
 
 <style scoped lang="scss">
