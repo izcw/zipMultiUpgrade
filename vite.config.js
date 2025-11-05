@@ -2,45 +2,69 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import autoprefixer from 'autoprefixer'
+import cssnano from 'cssnano'
+// 可选：仅在已安装 visualizer 时启用
+let visualizer
+try {
+  visualizer = require('rollup-plugin-visualizer').visualizer
+} catch {
+  visualizer = null
+}
 
 export default defineConfig(({ mode }) => {
   const isLib = mode === 'lib'
-  
+
   if (isLib) {
     return {
       plugins: [
         vue(),
-        // 启用构建分析（建议仅在需要分析时启用，避免每次构建都打开）
-        process.env.ANALYZE ? visualizer({
-          open: true, // 打包完成后自动打开分析页面
-          gzipSize: true, // 显示gzip后的大小
-          filename: 'dist/stats.html' // 将分析报告输出到dist目录
-        }) : null
-      ].filter(Boolean), // 过滤掉为null的插件
+        process.env.ANALYZE && visualizer
+          ? visualizer({
+              open: true,
+              gzipSize: true,
+              filename: 'dist/stats.html'
+            })
+          : null
+      ].filter(Boolean),
+
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))
-        },
+        }
       },
-      // 新增：依赖预构建优化
+
       optimizeDeps: {
-        include: ['jszip'] // 如果你的库源码中使用了jszip的ESM模块，可以在此预构建
+        include: ['jszip']
       },
+
+      css: {
+        postcss: {
+          plugins: [autoprefixer(), cssnano({ preset: 'default' })]
+        }
+      },
+
       build: {
         lib: {
           entry: resolve(__dirname, 'src/index.js'),
           name: 'ZipMultiUpgrade',
-          formats: ['es'], // 仅输出ES模块格式，利于Tree-shaking
-          fileName: () => 'zip-multi-upgrade.es.js'
+          formats: ['es'],
+          fileName: () => 'index.js' // ✅ 输出 index.js
         },
+
         rollupOptions: {
           external: ['vue', 'jszip'],
           output: {
-            assetFileNames: 'index.css'
-            // 可以考虑为chunk文件也命名
-            // chunkFileNames: 'chunks/[name]-[hash].js',
+            assetFileNames: 'index.css',
+            compact: true
+          },
+          treeshake: {
+            moduleSideEffects: false,
+            propertyReadSideEffects: false,
+            tryCatchDeoptimization: false
           }
         },
+
         emptyOutDir: true,
         outDir: 'dist',
         minify: 'terser',
@@ -48,17 +72,14 @@ export default defineConfig(({ mode }) => {
           compress: {
             drop_console: true,
             drop_debugger: true,
-            pure_funcs: ['console.log'] // 明确移除console.log，即使忘记删除console也行
+            passes: 3,
+            booleans_as_integers: true,
+            unsafe: true
           },
-          format: {
-            comments: false
-          },
-          // 新增：混淆选项，可进一步减小体积
-          mangle: {
-            properties: false // 库模式不建议混淆属性名，以免影响外部使用
-          }
+          format: { comments: false },
+          mangle: { properties: { regex: /^_/ } }
         },
-        sourcemap: true,
+        sourcemap: false
       }
     }
   } else {
@@ -67,12 +88,9 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))
-        },
+        }
       },
-      build: {
-        // 开发模式构建配置
-        sourcemap: true
-      }
+      build: { sourcemap: true }
     }
   }
 })

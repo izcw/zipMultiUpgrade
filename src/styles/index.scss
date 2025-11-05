@@ -1,0 +1,30 @@
+// 可维护：颜色先写成变量
+$scrollbar-track: #bfbfbf !default;
+$scrollbar-thumb: #8B8B8B !default;
+$scrollbar-thumb-inactive: #aaa !default;
+
+// 混合器：把整段滚动条样式包起来
+@mixin mini-scrollbar(
+  $width: 4px,
+  $height: 12px,
+  $track: $scrollbar-track,
+  $thumb: $scrollbar-thumb,
+  $inactive: $scrollbar-thumb-inactive
+) {
+  // 同时兼容横向、纵向
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $height;
+  }
+  &::-webkit-scrollbar-track {
+    background: $track;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $thumb;
+    border-radius: 10px;
+    &:window-inactive {
+      background: $inactive;
+    }
+  }
+}

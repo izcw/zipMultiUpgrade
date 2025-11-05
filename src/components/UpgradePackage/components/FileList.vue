@@ -1,41 +1,54 @@
 <!-- src\components\UpgradePackage\components\FileList.vue -->
 <template>
     <div class="file-list-container">
-        <div class="file-list" :class="{ 'with-details': showDetails }">
-            <div v-for="(file, index) in files" :key="file.name" class="file-item" :class="{ checked: isChecked(file) }"
-                :style="{ opacity: file.needUpgrade === false ? 0.5 : 1 }" @click="$emit('toggle-check', file)">
-                <input class="item-checkbox" type="checkbox" :checked="isChecked(file)"
-                    :disabled="file.needUpgrade === false" @click.stop @change="$emit('toggle-check', file)" />
-                <span class="item-index">{{ index + 1 }}</span>
-                <span class="item-name" :title="file.name">{{ file.shortName || file.name }}</span>
-
-                <template v-if="showDetails">
-                    <span class="item-li item-version">版本：{{ file.version || '-' }}</span>
-                    <span class="item-li item-size">大小：{{ formatSize(file.size) }}</span>
-                    <span class="item-li item-rules">规则：{{ file.rule || '-' }}</span>
-                    <span class="item-li item-ext">后缀：{{ file.ext }}</span>
-                    <span class="item-li item-cmd">命令：{{ file.cmd || '-' }}</span>
-                </template>
-            </div>
+      <div class="file-list" :class="{ 'with-details': showDetails }">
+        <div
+          v-for="(file, index) in files"
+          :key="file.name"
+          class="file-item"
+          :class="{ checked: isChecked(file) }"
+          :style="{ opacity: file.needUpgrade === false ? 0.5 : 1 }"
+          @click="$emit('toggle-check', file)"
+        >
+          <input
+            class="item-checkbox"
+            type="checkbox"
+            :checked="isChecked(file)"
+            :disabled="file.needUpgrade === false"
+            @click.stop
+            @change="$emit('toggle-check', file)"
+          />
+          <span class="item-index">{{ index + 1 }}</span>
+          <span class="item-name" :title="file.name">{{ file.shortName || file.name }}</span>
+          <template v-if="showDetails">
+            <span class="item-li item-version">版本：{{ file.version || '-' }}</span>
+            <span class="item-li item-size">大小：{{ formatSize(file.size) }}</span>
+            <span class="item-li item-rules">规则：{{ file.rule || '-' }}</span>
+            <span class="item-li item-ext">后缀：{{ file.ext }}</span>
+            <span class="item-li item-cmd">命令：{{ file.cmd || '-' }}</span>
+          </template>
         </div>
+      </div>
     </div>
-</template>
-
-<script setup>
-import { formatSize } from '@/utils/common.js'
-
-const props = defineProps({
+  </template>
+  
+  <script setup>
+  import { formatSize } from '@/utils/common.js'
+  
+  const props = defineProps({
     files: { type: Array, default: () => [] },
     checkedFiles: { type: Array, default: () => [] },
     showDetails: { type: Boolean, default: false }
-})
-const emit = defineEmits(['toggle-check'])
-
-// 用箭头函数——自动暴露
-const isChecked = file => props.checkedFiles.includes(file)
-</script>
+  })
+  
+  defineEmits(['toggle-check'])
+  
+  const isChecked = (file) => props.checkedFiles.includes(file)
+  </script>
 
 <style scoped lang="scss">
+@use '@/styles/index.scss' as *;
+
 .file-list-container {
     margin: 1rem 0;
 }
@@ -45,27 +58,8 @@ const isChecked = file => props.checkedFiles.includes(file)
     max-height: 120px;
     overflow-y: auto;
 
-    &.with-details {
-        max-height: 200px;
-    }
-
-    &::-webkit-scrollbar {
-        width: 4px;
-        height: 12px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: #141419;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-
-        &:window-inactive {
-            background-color: #aaa;
-        }
-    }
+    // 滚动条样式
+    @include mini-scrollbar; 
 }
 
 .file-item {

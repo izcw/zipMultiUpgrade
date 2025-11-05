@@ -1,6 +1,6 @@
 # zip-multi-upgrade
 
-`.zip` 多固件包升级组件库，支持上传 ZIP 固件包、筛选与自动识别固件、一键升级操作，并内置实时进度条和日志输出。
+`.zip` 多固件包升级库，支持上传 ZIP 固件包、筛选与自动识别固件、一键升级操作，并内置实时进度条和日志输出。
 
 ## 功能特性
 
@@ -11,22 +11,22 @@
 - 日志打印：自带日志面板，实时打印升级状态、错误信息与成功提示。
 - 自动检测：自动判断 ZIP 包结构、固件版本与目标设备是否匹配。
 
-## 使用
+## 使用指南
 
-### 安装
+安装
 
 ```sh
-npm i zip-multi-upgrade
+pnpm i zip-multi-upgrade
 ```
 
-### 引入
+引入
 
 ```javascript
 import { UpgradePackage, ProgressLog } from 'zip-multi-upgrade'
 import 'zip-multi-upgrade/index.css'
 ```
 
-### 使用示例
+使用示例
 
 ```javascript
 <template>
@@ -110,40 +110,33 @@ const onAllDone = () => {
 | `clearLogs()`                     | -  | 清空日志    |
 | `startCountDown(seconds: number)` | -  | 启动倒计时显示 |
 
-
 ## 开发
 
-### 打包构建
+打包构建
 
 ```bash
 npm run build:lib
 ```
 
-### 首先要登录npm
+登录npm（首次登录）
 
 ```bash
 npm login
 ```
 
-### 发布到npm
+发布npm
 
 ```bash
 npm publish --access=public
 ```
 
-### 本地调试
+本地调试
 
 ```bash
-# 在组件项目中执行
-npm link
+npm link # 在组件项目中执行
+npm run build:watch # 启动监听打包
 ```
 
 ```bash
-# 在使用项目中执行
-npm link zip-multi-upgrade
-```
-
-```bash
-# 启动监听打包
-npm run build:watch
+npm link zip-multi-upgrade # 在使用项目中执行
 ```
