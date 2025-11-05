@@ -1,4 +1,4 @@
-<!-- ProgressLog.vue -->
+<!-- src\components\ProgressLog\index.vue -->
 <template>
   <div class="progress-log-section" :style="rootStyle">
     <!-- 进度条 -->

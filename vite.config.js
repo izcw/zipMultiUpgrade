@@ -1,9 +1,14 @@
+// vite.config.js
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import autoprefixer from 'autoprefixer'
 import cssnano from 'cssnano'
+import VitePluginCssInjectedByJs from 'vite-plugin-css-injected-by-js'
+
+
+
 // 可选：仅在已安装 visualizer 时启用
 let visualizer
 try {
@@ -19,12 +24,13 @@ export default defineConfig(({ mode }) => {
     return {
       plugins: [
         vue(),
+        VitePluginCssInjectedByJs(),
         process.env.ANALYZE && visualizer
           ? visualizer({
-              open: true,
-              gzipSize: true,
-              filename: 'dist/stats.html'
-            })
+            open: true,
+            gzipSize: true,
+            filename: 'dist/stats.html'
+          })
           : null
       ].filter(Boolean),
 
@@ -64,6 +70,7 @@ export default defineConfig(({ mode }) => {
             tryCatchDeoptimization: false
           }
         },
+
 
         emptyOutDir: true,
         outDir: 'dist',

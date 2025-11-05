@@ -78,6 +78,7 @@
         :files="displayFiles"
         :checked-files="checkedFiles"
         :show-details="false"
+        :ListHeight="config.ListHeight"
         @toggle-check="toggleFileCheck"
       />
     </div>
@@ -90,35 +91,46 @@ import { loadAsync } from "jszip";
 import FileList from "./components/FileList.vue";
 import { formatSize } from "@/utils/common.js";
 
-// ==================== 事件定义 ====================
-const emit = defineEmits(["files-ready", "files-selected", "close", "error"]);
+// 事件定义
+const emit = defineEmits(["files-ready", "files-selected", "clear", "error"]);
 
-// ==================== 默认配置 ====================
+// 默认配置
 const defaultConfig = {
-  defaultSelectAll: true,
-  caseSensitive: true,
-  versionComparison: true,
-  showLowVersion: false,
-  showExceptFiles: true,
-  sortCheckedFiles: true,
-  priorityRules: [
-    {
-      suffix: "BIN",
-      namingformat: "SWITCH",
-      min: 0,
-      max: 819200,
-      cmd: "SWITCH-CMD",
-    },
-    { suffix: "APP", namingformat: "MCU", cmd: "RxConnect" },
-    {
-      suffix: "BIN",
-      namingformat: "EDID",
-      size: [128, 256],
-      cmd: "EDIDUpload",
-    },
-  ],
-  currentVersions: [],
+  ListHeight: 120, // 文件列表高度
+  defaultSelectAll: true, // 是否默认全选符合规则的文件
+  caseSensitive: true, // 规则匹配是否区分大小写
+  showExceptFiles: false, // 是否显示未命中规则的文件
+  sortCheckedFiles: true, // 升级文件是否按优先级排序
+  versionComparison: true, // 是否启用版本比对
+  showLowVersion: false, // 是否显示低版本文件
+  maxFileSize: 10 * 1024 * 1024, // 10MB 上传文件最大限制（字节）
+  priorityRules: [], // 文件匹配规则，匹配 suffix + namingformat + size 及排序
+  currentVersions: [], // 当前设备版本列表，用于比对
+  parseRuleAndVersion: (fileName) => {
+    // 自定义文件名解析规则 示例文件名：MCU_v1.2.3_SWITCH.BIN
+    // 1. 去掉文件扩展名（如 .BIN、.APP 等），然后按下划线拆分
+    const segs = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, "").split("_");
+
+    // 2. 取最后一段作为规则 (rule)，转为大写
+    //    如果无法获取，默认 'UNKNOWN'
+    const rule = segs.at(-1)?.toUpperCase() || "UNKNOWN";
+
+    // 3. 倒数第二段作为版本号字符串 (vSeg)
+    const vSeg = segs.at(-2);
+
+    // 4. 使用正则匹配版本号，如 v1.2.3 或 1.2.3
+    //    如果匹配不到，则为 null
+    const version = vSeg?.match(/^v?(\d+\.\d+\.\d+)$/i)?.[1] || null;
+
+    // 5. 获取文件后缀名 (suffix)，转为大写
+    const suffix = fileName.split(".").pop().toUpperCase();
+
+    // 6. 返回解析结果对象
+    return { rule, version, suffix };
+  },
+
   uploadConfig: {
+    // 文件类型配置
     zip: {
       ext: ["zip"],
       mime: ["application/zip", "application/x-zip-compressed"],
@@ -128,16 +140,8 @@ const defaultConfig = {
     tar: { ext: ["tar"], mime: ["application/x-tar"], allow: false },
     "7z": { ext: ["7z"], mime: ["application/x-7z-compressed"], allow: false },
   },
-  maxFileSize: 5 * 1024 * 1024,
-  parseRuleAndVersion: (name) => {
-    const segs = name.replace(/\.[A-Z]{3}$/i, "").split("_");
-    const rule = segs.at(-1)?.toUpperCase();
-    const vSeg = segs.at(-2);
-    const version = vSeg?.match(/^v(\d+\.\d+\.\d+)$/i)?.[1] || null;
-    const suffix = name.split(".").pop().toUpperCase();
-    return { rule, version, suffix };
-  },
   versionComparator: (a, b) => {
+    // 版本比较
     const toArr = (v) => (v ? v.split(".").map(Number) : [0, 0, 0]);
     const aa = toArr(a),
       bb = toArr(b);
@@ -145,6 +149,7 @@ const defaultConfig = {
     return 0;
   },
   ellipsisName: (n, max = 60) => {
+    // 省略号名称
     if (n.length <= max) return n;
     const i = n.lastIndexOf(".");
     const ext = i === -1 ? "" : n.slice(i);
@@ -421,7 +426,7 @@ const clearAll = () => {
   zipInstance.value = null;
   uploadedZip.value = null;
   if (fileInputRef.value) fileInputRef.value.value = "";
-  emit("close");
+  emit("clear");
 };
 
 const getFileBinary = async (name) => {
@@ -448,7 +453,6 @@ defineExpose({
   getSelectedFiles: () => processedFiles.value,
   getFileBinary,
   getAllSelectedBinary,
-  closePanel: clearAll,
   fileCount: computed(() => fileList.value.length),
   selectedCount: computed(() => checkedFiles.value.length),
   hasFiles,
