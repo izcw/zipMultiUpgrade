@@ -139,15 +139,7 @@ const defaultConfig = {
       bb = toArr(b);
     for (let i = 0; i < 3; i++) if (aa[i] !== bb[i]) return aa[i] - bb[i];
     return 0;
-  },
-  // 省略号名称
-  ellipsisName: (n, max = 60) => {
-    if (n.length <= max) return n;
-    const i = n.lastIndexOf(".");
-    const ext = i === -1 ? "" : n.slice(i);
-    const name = n.slice(0, i === -1 ? max : i);
-    return name.slice(0, Math.max(max - ext.length - 1, 1)) + "..." + ext;
-  },
+  }
 };
 
 // Props
@@ -392,6 +384,7 @@ const toggleSelectAll = () => {
 // 事件发射
 const emitFilesReady = () => {
   emit("files-ready", {
+    displayFiles: displayFiles.value,
     FilesAll: fileList.value,
     SelectedFiles: processedFiles.value,
     RawZip: uploadedZip.value,

@@ -2,21 +2,26 @@
 <template>
   <div class="progress-log-section" :style="rootStyle">
     <!-- 进度条 -->
-    <div class="progress-container">
+    <div class="progress-container" v-if="config.showProgressBar">
       <div class="progress-bar">
         <div class="progress-text">{{ progress }}%</div>
         <div
           class="progress-fill"
           :class="{ 'scroll-animation': progress < 100 }"
-          :style="{ width: progress + '%' }"
+          :style="{
+            width: progress + '%',
+            background: `${config.progressColor}BF`,
+          }"
         ></div>
       </div>
     </div>
 
     <!-- 日志容器 -->
-    <div ref="logContainer" class="log-container">
+    <div ref="logContainer" class="log-container" v-if="config.showLog">
       <div v-for="(log, i) in logs" :key="i" class="log-entry">
-        <span class="time">[{{ log.time }}]&ensp;</span>
+        <span class="time" v-if="config.showTimestamp"
+          >[{{ log.time }}]&ensp;</span
+        >
         <span :style="getTextStyle(log.color)">{{ log.msg }}</span>
       </div>
       <div v-if="countdown > 0" class="count-down">{{ countdown }}</div>
@@ -28,8 +33,21 @@
 import { ref, nextTick, onMounted, onUnmounted, computed } from "vue";
 
 const props = defineProps({
-  fontSize: { type: [String, Number], default: 12 },
+  config: { type: Object, default: () => ({}) },
 });
+
+// 默认配置
+const defaultConfig = {
+  fontSize: 12, // 字体大小
+  showProgressBar: true, // 是否显示进度条
+  showLog: true, // 是否显示日志
+  showTimestamp: true, //是否在日志前显示时间戳
+  autoScroll: true, // 是否自动滚动到最新日志
+  progressColor: "#3491fa", // 进度条颜色
+};
+
+// 合并配置
+const config = computed(() => ({ ...defaultConfig, ...props.config }));
 
 // 状态
 const logs = ref([]);
@@ -39,7 +57,7 @@ const logContainer = ref(null);
 let countdownTimer = null;
 
 const rootStyle = computed(() => ({
-  fontSize: `${props.fontSize}px`,
+  fontSize: `${config.value.fontSize}px`,
 }));
 
 // 颜色映射
@@ -47,8 +65,8 @@ const COLOR_MAP = {
   black: "#000000",
   white: "#ffffff",
   grey: "#94a1b1",
-  blue: "#57A9FB",
   green: "#23C343",
+  blue: "#57A9FB",
   red: "#F76560",
   orange: "#FF9A2E",
   purple: "#8D4EDA",
@@ -111,6 +129,7 @@ const clear = () => {
 };
 
 const scrollToBottom = () => {
+  if (!config.value.autoScroll) return;
   nextTick(() => {
     if (!logContainer.value) return;
     requestAnimationFrame(
@@ -161,12 +180,14 @@ onUnmounted(() => stopCountdown());
   position: relative;
   overflow: hidden;
 }
+
+// 条纹
 .progress-fill.scroll-animation::before {
   content: "";
   position: absolute;
   inset: 0;
   background-image: repeating-linear-gradient(
-    45deg,
+    135deg,
     transparent 0,
     transparent 8px,
     rgba(255, 255, 255, 0.15) 8px,
