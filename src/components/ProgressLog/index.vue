@@ -194,7 +194,6 @@ onUnmounted(() => stopCountdown());
   box-sizing: border-box;
   position: relative;
 
-  // 滚动条样式
   @include mini-scrollbar;
 }
 

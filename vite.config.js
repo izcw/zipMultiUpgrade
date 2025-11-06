@@ -3,16 +3,11 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import autoprefixer from 'autoprefixer'
-import cssnano from 'cssnano'
 import VitePluginCssInjectedByJs from 'vite-plugin-css-injected-by-js'
 
-
-
-// 可选：仅在已安装 visualizer 时启用
 let visualizer
 try {
-  visualizer = require('rollup-plugin-visualizer').visualizer
+  visualizer = (await import('rollup-plugin-visualizer')).visualizer
 } catch {
   visualizer = null
 }
@@ -26,11 +21,7 @@ export default defineConfig(({ mode }) => {
         vue(),
         VitePluginCssInjectedByJs(),
         process.env.ANALYZE && visualizer
-          ? visualizer({
-            open: true,
-            gzipSize: true,
-            filename: 'dist/stats.html'
-          })
+          ? visualizer({ open: true, gzipSize: true, filename: 'dist/stats.html' })
           : null
       ].filter(Boolean),
 
@@ -40,53 +31,56 @@ export default defineConfig(({ mode }) => {
         }
       },
 
-      optimizeDeps: {
-        include: ['jszip']
-      },
-
-      css: {
-        postcss: {
-          plugins: [autoprefixer(), cssnano({ preset: 'default' })]
-        }
-      },
-
       build: {
         lib: {
           entry: resolve(__dirname, 'src/index.js'),
           name: 'ZipMultiUpgrade',
           formats: ['es'],
-          fileName: () => 'index.js' // ✅ 输出 index.js
+          fileName: () => 'index.js'
         },
 
-        rollupOptions: {
-          external: ['vue', 'jszip'],
-          output: {
-            assetFileNames: 'index.css',
-            compact: true
-          },
-          treeshake: {
-            moduleSideEffects: false,
-            propertyReadSideEffects: false,
-            tryCatchDeoptimization: false
-          }
-        },
-
-
-        emptyOutDir: true,
-        outDir: 'dist',
         minify: 'terser',
         terserOptions: {
           compress: {
             drop_console: true,
             drop_debugger: true,
-            passes: 3,
-            booleans_as_integers: true,
-            unsafe: true
+            passes: 5,
+            pure_funcs: ['console.log', 'console.info'],
+            pure_getters: true,
+            unsafe: true,
+            unsafe_comps: true,
+            unsafe_math: true,
+            unsafe_proto: true
           },
-          format: { comments: false },
-          mangle: { properties: { regex: /^_/ } }
+          mangle: {
+            toplevel: true
+          },
+          format: {
+            comments: false,
+            beautify: false,
+            semicolons: false,
+            braces: false,
+            indent_level: 0,
+            ascii_only: true,
+            quote_style: 3
+          }
         },
-        sourcemap: false
+
+        rollupOptions: {
+          external: ['vue', 'jszip'],
+          output: {
+            compact: true,
+            assetFileNames: (assetInfo) => {
+              return assetInfo.name === 'style.css' ? 'index.css' : assetInfo.name
+            }
+          },
+          treeshake: { moduleSideEffects: false }
+        },
+
+        emptyOutDir: false, // 监听更快
+        outDir: 'dist',
+        sourcemap: false,
+        reportCompressedSize: true
       }
     }
   } else {

@@ -1,11 +1,12 @@
 // src\index.js
-import  { UpgradePackage, ProgressLog } from './components'
+import UpgradePackage from '@/components/UpgradePackage/index.vue'
+import ProgressLog from '@/components/ProgressLog/index.vue'
 
 // 定义 install 方法
 const install = (app, options = {}) => {
   app.component('UpgradePackage', UpgradePackage)
   app.component('ProgressLog', ProgressLog)
-  
+
   // 可以在这里提供全局配置
   if (options.config) {
     app.config.globalProperties.$upgradePackageConfig = options.config

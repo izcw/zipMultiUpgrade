@@ -3,7 +3,6 @@
   <div class="file-list-container">
     <div
       class="file-list"
-      :class="{ 'with-details': showDetails }"
       :style="{ height: ListHeight + 'px', maxHeight: ListHeight + 'px' }"
     >
       <div
@@ -26,29 +25,15 @@
         <span class="item-name" :title="file.name">{{
           file.shortName || file.name
         }}</span>
-        <template v-if="showDetails">
-          <span class="item-li item-version"
-            >版本：{{ file.version || "-" }}</span
-          >
-          <span class="item-li item-size"
-            >大小：{{ formatSize(file.size) }}</span
-          >
-          <span class="item-li item-rules">规则：{{ file.rule || "-" }}</span>
-          <span class="item-li item-ext">后缀：{{ file.ext }}</span>
-          <span class="item-li item-cmd">命令：{{ file.cmd || "-" }}</span>
-        </template>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { formatSize } from "@/utils/common.js";
-
 const props = defineProps({
   files: { type: Array, default: () => [] },
   checkedFiles: { type: Array, default: () => [] },
-  showDetails: { type: Boolean, default: false },
   ListHeight: { type: Number, default: 120 },
 });
 
@@ -69,7 +54,6 @@ const isChecked = (file) => props.checkedFiles.includes(file);
   max-height: 120px;
   overflow-y: auto;
 
-  // 滚动条样式
   @include mini-scrollbar;
 }
 
@@ -105,13 +89,6 @@ const isChecked = (file) => props.checkedFiles.includes(file);
   width: 16px;
   height: 16px;
   cursor: pointer;
-}
-
-.item-li {
-  background-color: #454f28;
-  padding: 4px;
-  border-radius: 3px;
-  white-space: nowrap;
 }
 
 .item-name {

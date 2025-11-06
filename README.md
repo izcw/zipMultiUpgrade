@@ -115,7 +115,7 @@ const onAllDone = () => {
 打包构建
 
 ```bash
-npm run build:lib
+npm run build
 ```
 
 登录npm（首次登录）

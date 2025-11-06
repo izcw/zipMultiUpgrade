@@ -77,7 +77,6 @@
       <FileList
         :files="displayFiles"
         :checked-files="checkedFiles"
-        :show-details="false"
         :ListHeight="config.ListHeight"
         @toggle-check="toggleFileCheck"
       />
@@ -99,38 +98,29 @@ const defaultConfig = {
   ListHeight: 120, // 文件列表高度
   defaultSelectAll: true, // 是否默认全选符合规则的文件
   caseSensitive: true, // 规则匹配是否区分大小写
-  showExceptFiles: false, // 是否显示未命中规则的文件
+  showExceptFiles: true, // 是否显示未命中规则的文件
   sortCheckedFiles: true, // 升级文件是否按优先级排序
   versionComparison: true, // 是否启用版本比对
   showLowVersion: false, // 是否显示低版本文件
   maxFileSize: 10 * 1024 * 1024, // 10MB 上传文件最大限制（字节）
   priorityRules: [], // 文件匹配规则，匹配 suffix + namingformat + size 及排序
   currentVersions: [], // 当前设备版本列表，用于比对
+  // 自定义版本及规则解析
   parseRuleAndVersion: (fileName) => {
-    // 自定义文件名解析规则 示例文件名：MCU_v1.2.3_SWITCH.BIN
-    // 1. 去掉文件扩展名（如 .BIN、.APP 等），然后按下划线拆分
-    const segs = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, "").split("_");
+    const segs = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, "").split("_"); // 1. 去掉文件扩展名（如 .BIN、.APP 等），然后按下划线拆分
+    const rule = // 2. 取最后一段作为规则 (rule)
+      segs
+        .at(-1) // 取最后一段
+        ?.match(/^#(.+)$/)?.[1] // 以 # 开头就取 # 后内容
+        ?.toUpperCase() || null; // 转大写，没有就 UNKNOWN
 
-    // 2. 取最后一段作为规则 (rule)，转为大写
-    //    如果无法获取，默认 'UNKNOWN'
-    const rule = segs.at(-1)?.toUpperCase() || "UNKNOWN";
-
-    // 3. 倒数第二段作为版本号字符串 (vSeg)
-    const vSeg = segs.at(-2);
-
-    // 4. 使用正则匹配版本号，如 v1.2.3 或 1.2.3
-    //    如果匹配不到，则为 null
-    const version = vSeg?.match(/^v?(\d+\.\d+\.\d+)$/i)?.[1] || null;
-
-    // 5. 获取文件后缀名 (suffix)，转为大写
-    const suffix = fileName.split(".").pop().toUpperCase();
-
-    // 6. 返回解析结果对象
-    return { rule, version, suffix };
+    const vSeg = segs.at(-2); // 3. 倒数第二段作为版本号字符串 (vSeg)
+    const version = vSeg?.match(/^v?(\d+\.\d+\.\d+)$/i)?.[1] || null; // 4. 使用正则匹配版本号，如 v1.2.3 或 1.2.3
+    return { rule, version };
   },
 
+  // 文件类型配置
   uploadConfig: {
-    // 文件类型配置
     zip: {
       ext: ["zip"],
       mime: ["application/zip", "application/x-zip-compressed"],
@@ -140,16 +130,16 @@ const defaultConfig = {
     tar: { ext: ["tar"], mime: ["application/x-tar"], allow: false },
     "7z": { ext: ["7z"], mime: ["application/x-7z-compressed"], allow: false },
   },
+  // 版本比较
   versionComparator: (a, b) => {
-    // 版本比较
     const toArr = (v) => (v ? v.split(".").map(Number) : [0, 0, 0]);
     const aa = toArr(a),
       bb = toArr(b);
     for (let i = 0; i < 3; i++) if (aa[i] !== bb[i]) return aa[i] - bb[i];
     return 0;
   },
+  // 省略号名称
   ellipsisName: (n, max = 60) => {
-    // 省略号名称
     if (n.length <= max) return n;
     const i = n.lastIndexOf(".");
     const ext = i === -1 ? "" : n.slice(i);
@@ -158,15 +148,15 @@ const defaultConfig = {
   },
 };
 
-// ==================== Props ====================
+// Props
 const props = defineProps({
   config: { type: Object, default: () => ({}) },
 });
 
-// ==================== 合并配置 ====================
+// 合并配置
 const config = computed(() => ({ ...defaultConfig, ...props.config }));
 
-// ==================== 响应式状态 ====================
+// 响应式状态
 const fileInputRef = ref(null);
 const uploadedZip = ref(null);
 const zipInstance = ref(null);
@@ -174,7 +164,7 @@ const fileList = ref([]);
 const checkedFiles = ref([]);
 const isParsing = ref(false); // 防止重复解析 ZIP
 
-// ==================== 计算属性 ====================
+// 计算属性
 const hasFiles = computed(() => fileList.value.length > 0);
 
 const acceptExtensions = computed(() => {
@@ -211,18 +201,17 @@ const processedFiles = computed(() => {
     : checkedFiles.value;
 
   return sorted.map((file) => ({
+    ...file,
     name: file.name,
     ext: file.ext,
     version: file.version,
     rule: file.rule,
     size: file.size,
-    cmd: file.cmd,
+    other: file.other,
     priority: file.priority,
     needUpgrade: file.needUpgrade,
     curVersion: file.curVersion,
     hitRule: file.hitRule,
-    shortName: file.shortName,
-    // 修复：File 是 Promise<File>
     File: (async () => {
       if (file.entry && zipInstance.value) {
         const uint8 = await file.entry.async("uint8array");
@@ -307,11 +296,10 @@ const createFileEntry = (name, entry) => {
     date: entry.date,
     entry,
     hitRule: false,
-    cmd: "",
-    shortName: "",
     priority: Infinity,
     needUpgrade: true,
     curVersion: null,
+    other: null,
   };
 };
 
@@ -319,14 +307,11 @@ const applyRulesAndSort = (files) => {
   files.forEach((file) => {
     const idx = config.value.priorityRules.findIndex((rule) => {
       if (file.ext !== rule.suffix) return false;
+
       const key = config.value.caseSensitive
         ? rule.namingformat
         : rule.namingformat.toUpperCase();
-      let seg =
-        file.name
-          .replace(/\.[A-Z]{3}$/i, "")
-          .split("_")
-          .at(-1) || "";
+      let seg = config.value.parseRuleAndVersion(file.name).rule;
       if (!config.value.caseSensitive) seg = seg.toUpperCase();
       if (seg !== key) return false;
       if (rule.size) return rule.size.includes(file.size);
@@ -334,11 +319,13 @@ const applyRulesAndSort = (files) => {
       if (rule.max !== undefined && file.size > rule.max) return false;
       return true;
     });
-
-    file.hitRule = idx !== -1;
-    file.priority = idx === -1 ? Infinity : idx;
-    file.cmd = config.value.priorityRules[idx]?.cmd || "";
-    file.shortName = config.value.ellipsisName(file.name);
+    Object.assign(file, {
+      // ...config.value.priorityRules[idx],
+      other: config.value.priorityRules[idx]?.other || null,
+      formatSize: formatSize(file.size),
+      hitRule: idx !== -1,
+      priority: idx === -1 ? Infinity : idx,
+    });
   });
 
   files.sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
@@ -376,7 +363,7 @@ const autoSelectFiles = () => {
   emitFilesSelected();
 };
 
-// ==================== 选择管理 ====================
+// 选择管理
 const toggleFileCheck = (file) => {
   if (file.needUpgrade === false) return;
   const i = checkedFiles.value.indexOf(file);
@@ -400,7 +387,7 @@ const toggleSelectAll = () => {
   emitFilesSelected();
 };
 
-// ==================== 事件发射 ====================
+// 事件发射
 const emitFilesReady = () => {
   emit("files-ready", {
     FilesAll: fileList.value,
@@ -419,7 +406,7 @@ const emitFilesSelected = () => {
 
 const emitError = (msg) => emit("error", msg);
 
-// ==================== 工具方法 ====================
+// 工具方法
 const clearAll = () => {
   fileList.value = [];
   checkedFiles.value = [];
@@ -442,7 +429,7 @@ const getAllSelectedBinary = async () => {
   return result;
 };
 
-// ==================== 暴露方法 ====================
+// 暴露方法
 defineExpose({
   clearAll,
   refresh: () => {
@@ -460,7 +447,8 @@ defineExpose({
   getConfig: () => config.value,
 });
 
-// ==================== 监听 ====================
+
+// 监听
 watch(
   () => config.value.caseSensitive,
   () => {
