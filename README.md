@@ -22,8 +22,7 @@ pnpm i zip-multi-upgrade
 引入
 
 ```javascript
-import { UpgradePackage, ProgressLog } from 'zip-multi-upgrade'
-import 'zip-multi-upgrade/index.css'
+import { UpgradePackage, ProgressLog } from "zip-multi-upgrade";
 ```
 
 使用示例
@@ -46,7 +45,6 @@ import 'zip-multi-upgrade/index.css'
 <script setup>
 // 引入组件
 import { UpgradePackage, ProgressLog } from 'zip-multi-upgrade'
-import 'zip-multi-upgrade/index.css'
 
 // 模拟固件升级函数
 const handleUpgrade = async (file) => {

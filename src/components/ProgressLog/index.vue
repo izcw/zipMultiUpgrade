@@ -31,7 +31,7 @@ const props = defineProps({
   fontSize: { type: [String, Number], default: 12 },
 });
 
-// ==================== 状态 ====================
+// 状态
 const logs = ref([]);
 const progress = ref(0);
 const countdown = ref(0);
@@ -39,19 +39,16 @@ const logContainer = ref(null);
 let countdownTimer = null;
 
 const rootStyle = computed(() => ({
-  fontSize:
-    typeof props.fontSize === "number" ? `${props.fontSize}px` : props.fontSize,
+  fontSize: `${props.fontSize}px`,
 }));
 
-// ==================== 颜色映射 ====================
-// 颜色映射（只保留基础颜色，不加粗）
+// 颜色映射
 const COLOR_MAP = {
   black: "#000000",
   white: "#ffffff",
-  grey: "#59636e",
+  grey: "#94a1b1",
   blue: "#57A9FB",
   green: "#23C343",
-  error: "#F76560",
   red: "#F76560",
   orange: "#FF9A2E",
   purple: "#8D4EDA",
@@ -79,7 +76,7 @@ const getTextStyle = (color) => {
   return { color: hex, fontWeight };
 };
 
-// ==================== 公开 API ====================
+// 公开 API
 const addLog = (msg, color) => {
   const time = new Date().toLocaleTimeString("zh-CN", { hour12: false });
   logs.value.push({ time, msg, color });
@@ -132,10 +129,10 @@ onUnmounted(() => stopCountdown());
 @use "@/styles/index.scss" as *;
 
 .progress-log-section {
-  padding-top: 1rem;
+  padding: 10px 0;
 }
 .progress-container {
-  margin-bottom: 1rem;
+  margin-bottom: 10px;
 }
 .progress-bar {
   width: 100%;
@@ -187,12 +184,13 @@ onUnmounted(() => stopCountdown());
   }
 }
 .log-container {
+  height: 200px;
   max-height: 200px;
   overflow-y: auto;
-  font-size: 12px;
   padding: 5px;
   box-sizing: border-box;
   position: relative;
+  margin: 10px 0;
 
   @include mini-scrollbar;
 }

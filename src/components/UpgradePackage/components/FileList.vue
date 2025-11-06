@@ -46,7 +46,7 @@ const isChecked = (file) => props.checkedFiles.includes(file);
 @use "@/styles/index.scss" as *;
 
 .file-list-container {
-  margin: 1rem 0;
+  margin: 10px 0;
 }
 
 .file-list {
@@ -61,22 +61,21 @@ const isChecked = (file) => props.checkedFiles.includes(file);
   display: flex;
   align-items: center;
   font-size: 12px;
-  padding: 4px;
+  padding: 4px 8px;
   margin-bottom: 4px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(204, 204, 204, 0.15);
   }
-
   &.checked {
-    background-color: rgba(66, 133, 244, 0.1);
+    background-color: rgba(204, 204, 204, 0.2);
   }
 
   > * {
-    margin-right: 6px;
+    margin: 3px 6px 3px 0;
     font-size: 14px;
 
     &:last-child {
