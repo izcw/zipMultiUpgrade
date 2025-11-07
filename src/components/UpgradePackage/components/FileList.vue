@@ -10,14 +10,26 @@
         :key="file.name"
         class="file-item"
         :class="{ checked: isChecked(file) }"
-        :style="{ opacity: file.needUpgrade === false ? 0.5 : 1 }"
+        :style="{
+          opacity: props.disableLowVersion
+            ? file.needUpgrade === false
+              ? 0.5
+              : 1
+            : 1,
+        }"
         @click="$emit('toggle-check', file)"
       >
         <input
           class="item-checkbox"
           type="checkbox"
           :checked="isChecked(file)"
-          :disabled="file.needUpgrade === false"
+          :disabled="
+            props.disableLowVersion
+              ? file.needUpgrade === false
+                ? true
+                : false
+              : false
+          "
           @click.stop
           @change="$emit('toggle-check', file)"
         />
@@ -34,12 +46,15 @@
 const props = defineProps({
   files: { type: Array, default: () => [] },
   checkedFiles: { type: Array, default: () => [] },
+  disableLowVersion: { type: Boolean, default: () => true },
   ListHeight: { type: Number, default: 120 },
 });
 
 defineEmits(["toggle-check"]);
 
-const isChecked = (file) => props.checkedFiles.includes(file);
+const isChecked = (file) => {
+  return props.checkedFiles.includes(file);
+};
 </script>
 
 <style scoped lang="scss">
@@ -50,8 +65,6 @@ const isChecked = (file) => props.checkedFiles.includes(file);
 }
 
 .file-list {
-  height: 120px;
-  max-height: 120px;
   overflow-y: auto;
 
   @include mini-scrollbar;

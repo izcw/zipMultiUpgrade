@@ -1,6 +1,6 @@
 {
   "name": "zip-multi-upgrade",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "A configurable Vue 3 component for managing firmware upgrade packages",
   "type": "module",
   "main": "dist/index.js",

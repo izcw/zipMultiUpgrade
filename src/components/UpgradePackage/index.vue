@@ -13,7 +13,7 @@
             ref="fileInputRef"
           />
           <div class="upload-icon">
-            <slot name="upload-icon">
+            <slot name="uploadIcon">
               <div class="default-icon">
                 <svg
                   t="1761533624000"
@@ -40,7 +40,7 @@
           <p v-else>Click to upload</p>
         </div>
         <div class="delete-icon" v-if="uploadedZip" @click="clearAll">
-          <slot name="delete-icon">
+          <slot name="deleteIcon">
             <div class="default-icon">
               <svg
                 t="1761288962731"
@@ -80,6 +80,7 @@
         :files="displayFiles"
         :checked-files="checkedFiles"
         :ListHeight="config.ListHeight"
+        :disableLowVersion="config.disableLowVersion"
         @toggle-check="toggleFileCheck"
       />
     </div>
@@ -87,10 +88,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from "vue";
+import { ref, computed, watch, onUnmounted, toRaw } from "vue";
 import { loadAsync } from "jszip";
 import FileList from "./components/FileList.vue";
-import { formatSize } from "@/utils/common.js";
+import { formatSize, versionComparator } from "@/utils/common.js";
 
 // 事件定义
 const emit = defineEmits(["files-ready", "selected", "clear", "error"]);
@@ -98,48 +99,31 @@ const emit = defineEmits(["files-ready", "selected", "clear", "error"]);
 // 默认配置
 const defaultConfig = {
   ListHeight: 120, // 文件列表高度
-  defaultSelectAll: true, // 是否默认全选符合规则的文件
-  caseSensitive: true, // 规则匹配是否区分大小写
+  defaultSelection: "filter", // 是否默认选择 'filter' | 'all' | 'none'
+  caseSensitive: false, // 规则匹配是否区分大小写
   showExceptFiles: true, // 是否显示未命中规则的文件
   sortCheckedFiles: true, // 升级文件是否按优先级排序
-  versionComparison: true, // 是否启用版本比对
+  versionComparison: false, // 是否启用版本比对
   showLowVersion: false, // 是否显示低版本文件
+  disableLowVersion: true, // 是否禁用低版本文件
   maxFileSize: 10 * 1024 * 1024, // 10MB 上传文件最大限制（字节）
   priorityRules: [], // 文件匹配规则，匹配 suffix + namingformat + size 及排序
   currentVersions: [], // 当前设备版本列表，用于比对
   // 自定义版本及规则解析
-  parseRuleAndVersion: (fileName) => {
-    const segs = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, "").split("_"); // 1. 去掉文件扩展名（如 .BIN、.APP 等），然后按下划线拆分
-    const rule = // 2. 取最后一段作为规则 (rule)
-      segs
-        .at(-1) // 取最后一段
-        ?.match(/^#(.+)$/)?.[1] // 以 # 开头就取 # 后内容
-        ?.toUpperCase() || null; // 转大写，没有就 UNKNOWN
+  parseVersionRule: (fileName) => {
+    const baseName = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, ""); // 1. 移除文件扩展名
+    const ruleMatch = baseName.match(/_#([^_]+)$/); // 2. 提取规则（从最后一段匹配 # 开头的内容）
+    const rule = ruleMatch?.[1] || null;
 
-    const vSeg = segs.at(-2); // 3. 倒数第二段作为版本号字符串 (vSeg)
-    const version = vSeg?.match(/^v?(\d+\.\d+\.\d+)$/i)?.[1] || null; // 4. 使用正则匹配版本号，如 v1.2.3 或 1.2.3
-    return { rule, version };
-  },
+    // 3. 移除规则部分，准备匹配版本号
+    const withoutRule = ruleMatch
+      ? baseName.slice(0, -ruleMatch[0].length)
+      : baseName;
 
-  // 文件类型配置
-  uploadConfig: {
-    zip: {
-      ext: ["zip"],
-      mime: ["application/zip", "application/x-zip-compressed"],
-      allow: true,
-    },
-    rar: { ext: ["rar"], mime: ["application/x-rar-compressed"], allow: false },
-    tar: { ext: ["tar"], mime: ["application/x-tar"], allow: false },
-    "7z": { ext: ["7z"], mime: ["application/x-7z-compressed"], allow: false },
+    const versionMatch = withoutRule.match(/_v?(\d+\.\d+\.\d+)$/i); // 4. 提取版本号（匹配倒数第二段的 v1.2.3格式 并截取掉v）
+    const version = versionMatch?.[1] || null;
+    return { version, rule };
   },
-  // 版本比较
-  versionComparator: (a, b) => {
-    const toArr = (v) => (v ? v.split(".").map(Number) : [0, 0, 0]);
-    const aa = toArr(a),
-      bb = toArr(b);
-    for (let i = 0; i < 3; i++) if (aa[i] !== bb[i]) return aa[i] - bb[i];
-    return 0;
-  }
 };
 
 // Props
@@ -149,6 +133,18 @@ const props = defineProps({
 
 // 合并配置
 const config = computed(() => ({ ...defaultConfig, ...props.config }));
+
+// 文件类型配置
+const uploadConfig = {
+  zip: {
+    ext: ["zip"],
+    mime: ["application/zip", "application/x-zip-compressed"],
+    allow: true,
+  },
+  rar: { ext: ["rar"], mime: ["application/x-rar-compressed"], allow: false },
+  tar: { ext: ["tar"], mime: ["application/x-tar"], allow: false },
+  "7z": { ext: ["7z"], mime: ["application/x-7z-compressed"], allow: false },
+};
 
 // 响应式状态
 const fileInputRef = ref(null);
@@ -162,7 +158,7 @@ const isParsing = ref(false); // 防止重复解析 ZIP
 const hasFiles = computed(() => fileList.value.length > 0);
 
 const acceptExtensions = computed(() => {
-  return Object.entries(config.value.uploadConfig)
+  return Object.entries(uploadConfig)
     .filter(([, cfg]) => cfg.allow)
     .flatMap(([, cfg]) => cfg.ext.map((e) => `.${e}`))
     .join(",");
@@ -180,7 +176,9 @@ const displayFiles = computed(() => {
 });
 
 const isAllSelected = computed(() => {
-  const available = displayFiles.value.filter((f) => f.needUpgrade !== false);
+  const available = displayFiles.value.filter((f) =>
+    config.value.disableLowVersion ? f.needUpgrade !== false : true
+  );
   return (
     available.length > 0 &&
     available.every((f) => checkedFiles.value.includes(f))
@@ -224,7 +222,7 @@ const processedFiles = computed(() => {
 const isFileAllowed = (file) => {
   const ext = file.name.split(".").pop().toLowerCase();
   const mime = file.type || "";
-  for (const [key, cfg] of Object.entries(config.value.uploadConfig)) {
+  for (const [key, cfg] of Object.entries(uploadConfig)) {
     if (!cfg.allow) continue;
     if (cfg.ext.includes(ext) || (mime && cfg.mime.includes(mime))) return true;
   }
@@ -279,8 +277,8 @@ const parseZipFile = async (file) => {
 };
 
 const createFileEntry = (name, entry) => {
-  const ext = name.split(".").pop().toUpperCase();
-  const { rule, version } = config.value.parseRuleAndVersion(name);
+  const ext = name.split(".").pop()?.toString().toUpperCase();
+  const { rule, version } = config.value.parseVersionRule(name);
   return {
     name,
     ext,
@@ -300,21 +298,22 @@ const createFileEntry = (name, entry) => {
 const applyRulesAndSort = (files) => {
   files.forEach((file) => {
     const idx = config.value.priorityRules.findIndex((rule) => {
-      if (file.ext !== rule.suffix) return false;
+      let suffixToString = rule.suffix?.toString().toUpperCase();
+      if (file.ext !== suffixToString) return false;
 
       const key = config.value.caseSensitive
         ? rule.namingformat
-        : rule.namingformat.toUpperCase();
-      let seg = config.value.parseRuleAndVersion(file.name).rule;
-      if (!config.value.caseSensitive) seg = seg.toUpperCase();
+        : rule.namingformat?.toString().toUpperCase();
+      let seg = config.value.parseVersionRule(file.name).rule;
+      if (!config.value.caseSensitive) seg = seg?.toString().toUpperCase();
       if (seg !== key) return false;
       if (rule.size) return rule.size.includes(file.size);
       if (rule.min !== undefined && file.size < rule.min) return false;
       if (rule.max !== undefined && file.size > rule.max) return false;
       return true;
     });
+
     Object.assign(file, {
-      // ...config.value.priorityRules[idx],
       other: config.value.priorityRules[idx]?.other || null,
       formatSize: formatSize(file.size),
       hitRule: idx !== -1,
@@ -333,24 +332,34 @@ const applyVersionCheck = () => {
 
   fileList.value.forEach((file) => {
     const cur = config.value.currentVersions.find(
-      (v) => v.namingformat === file.rule && v.suffix === file.ext
+      (v) =>
+        v.namingformat?.toString().toUpperCase() ===
+          file.rule?.toString().toUpperCase() &&
+        v.suffix?.toString().toUpperCase() ===
+          file.ext?.toString().toUpperCase()
     );
     if (!cur || !cur.version) {
       file.needUpgrade = true;
       file.curVersion = null;
     } else {
       file.curVersion = cur.version;
-      file.needUpgrade =
-        config.value.versionComparator(file.version, cur.version) > 0;
+      file.needUpgrade = versionComparator(file.version, cur.version) > 0;
     }
   });
 };
 
+// 自动选择
 const autoSelectFiles = () => {
-  if (config.value.defaultSelectAll) {
+  if (config.value.defaultSelection === "filter") {
     checkedFiles.value = fileList.value.filter(
       (f) => f.hitRule && f.needUpgrade
     );
+  } else if (config.value.defaultSelection === "all") {
+    checkedFiles.value = displayFiles.value.filter((f) =>
+      config.value.disableLowVersion ? f.needUpgrade !== false : true
+    );
+  } else if (config.value.defaultSelection === "no") {
+    checkedFiles.value = [];
   } else {
     checkedFiles.value = [];
   }
@@ -359,14 +368,16 @@ const autoSelectFiles = () => {
 
 // 选择管理
 const toggleFileCheck = (file) => {
-  if (file.needUpgrade === false) return;
+  if (config.value.disableLowVersion && file.needUpgrade === false) return;
   const i = checkedFiles.value.indexOf(file);
   i === -1 ? checkedFiles.value.push(file) : checkedFiles.value.splice(i, 1);
   emitFilesSelected();
 };
 
 const toggleSelectAll = () => {
-  const available = displayFiles.value.filter((f) => f.needUpgrade !== false);
+  const available = displayFiles.value.filter((f) =>
+    config.value.disableLowVersion ? f.needUpgrade !== false : true
+  );
   if (!available.length) return;
   const allChecked = available.every((f) => checkedFiles.value.includes(f));
   if (allChecked) {

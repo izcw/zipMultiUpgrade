@@ -12,6 +12,9 @@ try {
   visualizer = null
 }
 
+// 判断是否在监听模式
+const isWatchMode = process.argv.includes('--watch')
+
 export default defineConfig(({ mode }) => {
   const isLib = mode === 'lib'
 
@@ -42,10 +45,10 @@ export default defineConfig(({ mode }) => {
         minify: 'terser',
         terserOptions: {
           compress: {
-            drop_console: true,
-            drop_debugger: true,
+            drop_console: !isWatchMode,
+            drop_debugger: !isWatchMode,
             passes: 5,
-            pure_funcs: ['console.log', 'console.info'],
+            pure_funcs: isWatchMode ? [] : ['console.log', 'console.info'],
             pure_getters: true,
             unsafe: true,
             unsafe_comps: true,

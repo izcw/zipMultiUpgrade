@@ -138,7 +138,16 @@ const scrollToBottom = () => {
   });
 };
 
-defineExpose({ addLog, setProgress, startCountdown, stopCountdown, clear });
+const getLogs = () => logs.value;
+
+defineExpose({
+  addLog,
+  setProgress,
+  startCountdown,
+  stopCountdown,
+  clear,
+  getLogs,
+});
 
 onMounted(() => clear());
 onUnmounted(() => stopCountdown());
@@ -174,7 +183,7 @@ onUnmounted(() => stopCountdown());
 }
 .progress-fill {
   height: 100%;
-  background: linear-gradient(45deg, #3491fa, #57a9fb);
+  // background: linear-gradient(45deg, #3491fa, #57a9fb);
   border-radius: 10px;
   transition: width 0.3s;
   position: relative;
