@@ -235,5 +235,9 @@ onUnmounted(() => stopCountdown());
   align-items: flex-start;
   word-wrap: break-word;
   word-break: break-all;
+
+  .time{
+    white-space: nowrap;
+  }
 }
 </style>
