@@ -476,7 +476,6 @@ onUnmounted(clearAll);
   gap: 10px;
   position: relative;
   font-size: 14px;
-  padding: 10px 0;
   box-sizing: border-box;
 }
 

@@ -220,8 +220,9 @@ npm publish --access=public
 本地调试
 
 ```bash
-npm link            # 在组件项目中执行
+npm link            # 链接（在组件项目中执行）
 npm run build:watch # 启动监听打包
+# npm unlink 取消链接
 ```
 
 ```bash

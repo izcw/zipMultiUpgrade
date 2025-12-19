@@ -1,6 +1,6 @@
 <!-- src\components\ProgressLog\index.vue -->
 <template>
-  <div class="progress-log-section" :style="rootStyle">
+  <div class="progress-log-section">
     <!-- 进度条 -->
     <div class="progress-container" v-if="config.showProgressBar">
       <div class="progress-bar">
@@ -17,14 +17,26 @@
     </div>
 
     <!-- 日志容器 -->
-    <div ref="logContainer" class="log-container" v-if="config.showLog">
-      <div v-for="(log, i) in logs" :key="i" class="log-entry">
+    <div
+      ref="logContainer"
+      class="log-container"
+      v-if="config.showLog"
+      :style="rootStyle"
+    >
+      <div
+        v-for="(log, i) in logs"
+        :key="i"
+        class="log-entry"
+        :style="rootStyle"
+      >
         <span class="time" v-if="config.showTimestamp"
           >[{{ log.time }}]&ensp;</span
         >
         <span :style="getTextStyle(log.color)">{{ log.msg }}</span>
       </div>
-      <div v-if="countdown > 0" class="count-down">{{ countdown }}</div>
+      <span v-if="countdown > 0" class="count-down">
+        {{ countdown }}
+      </span>
     </div>
   </div>
 </template>
@@ -157,7 +169,7 @@ onUnmounted(() => stopCountdown());
 @use "@/styles/index.scss" as *;
 
 .progress-log-section {
-  padding: 10px 0;
+  // padding: 10px 0;
 }
 .progress-container {
   margin-bottom: 10px;
@@ -214,13 +226,17 @@ onUnmounted(() => stopCountdown());
   }
 }
 .log-container {
-  height: 200px;
-  max-height: 200px;
+  height: 120px;
+  max-height: 120px;
   overflow-y: auto;
   padding: 5px;
   box-sizing: border-box;
   position: relative;
   margin: 10px 0;
+
+  span {
+    font-size: inherit;
+  }
 
   @include mini-scrollbar;
 }
@@ -236,7 +252,7 @@ onUnmounted(() => stopCountdown());
   word-wrap: break-word;
   word-break: break-all;
 
-  .time{
+  .time {
     white-space: nowrap;
   }
 }
