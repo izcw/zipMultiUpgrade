@@ -214,32 +214,59 @@ function onFilesSelected(val) {
 
 ## 开发与发布
 
-构建打包
+### 一、npm 包管理方式（推荐）
+
+#### 构建打包
 
 ```bash
 npm run build
 ```
 
-首次登录 npm
+#### 首次使用需登录
 
 ```bash
 npm login
 ```
 
-发布到 npm
+#### 发布到 npm
 
 ```bash
 npm publish --access=public
 ```
 
-本地调试
+#### 本地调试
+
+在 npm 包项目中
 
 ```bash
-npm link            # 链接（在组件项目中执行）
-npm run build:watch # 启动监听打包
-# npm unlink 取消链接
+npm link            # 创建本地软链接（在组件项目中执行）
+npm run build:watch # 监听模式构建
+# npm unlink        # 取消链接
 ```
 
+在使用项目中：
+
 ```bash
-npm link zip-multi-upgrade # 在使用项目中执行
+npm link zip-multi-upgrade # 链接到本地包
 ```
+
+### 二、本地引用方式
+
+#### 构建打包
+
+```bash
+npm run build
+```
+
+```javascript
+// 示例：从构建产物引入,或从源文件引入（需兼容构建配置）
+import { xxx } from './xx/xx.js';
+```
+
+### 三、私有仓库部署方式
+
+> 适用于企业内网或私有化部署场景，具体步骤可参考相关私有仓库搭建文档。
+
+## 注意事项
+
+- 发布 npm 版本后，请务必创建对应版本的 Git Tag，便于追溯与管理。
