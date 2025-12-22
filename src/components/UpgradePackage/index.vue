@@ -4,13 +4,14 @@
     <!-- 上传区域 -->
     <div class="upload-section">
       <div class="file-upload">
-        <div class="file-upload-button">
+        <div class="file-upload-button" :class="{ disabled: useExternalFile }">
           <input
             class="file-input"
             type="file"
             :accept="acceptExtensions"
             @change="handleFileSelect"
             ref="fileInputRef"
+            :disabled="useExternalFile"
           />
           <div class="upload-icon">
             <slot name="uploadIcon">
@@ -20,7 +21,7 @@
                   class="icon"
                   viewBox="0 0 1024 1024"
                   version="1.1"
-                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns="http://www.w3.org/2000/svg "
                   p-id="4538"
                   width="32"
                   height="32"
@@ -38,6 +39,8 @@
             {{ uploadedZip.name }} ({{ formatSize(uploadedZip.size) }})
           </p>
           <p v-else>Click to upload</p>
+          <!-- 显示外部文件模式提示 -->
+          <p v-if="useExternalFile" class="external-file-tip">（外部文件模式）</p>
         </div>
         <div class="delete-icon" v-if="uploadedZip" @click="clearAll">
           <slot name="deleteIcon">
@@ -47,7 +50,7 @@
                 class="icon"
                 viewBox="0 0 1025 1024"
                 version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg "
                 p-id="4671"
                 width="32"
                 height="32"
@@ -129,6 +132,8 @@ const defaultConfig = {
 // Props
 const props = defineProps({
   config: { type: Object, default: () => ({}) },
+  useExternalFile: { type: Boolean, default: false }, // 是否使用外部文件
+  externalFile: { type: File, default: null }, // 外部传入的文件
 });
 
 // 合并配置
@@ -230,6 +235,12 @@ const isFileAllowed = (file) => {
 };
 
 const handleFileSelect = async (e) => {
+  // 如果启用了外部文件模式，禁止手动上传
+  if (props.useExternalFile) {
+    emitError("当前正在使用外部文件，无法手动上传");
+    return;
+  }
+  
   const file = e.target.files[0];
   if (!file) return;
 
@@ -453,7 +464,7 @@ defineExpose({
   getConfig: () => config.value,
 });
 
-// 监听
+// 监听配置变化
 watch(
   () => config.value.caseSensitive,
   () => {
@@ -461,6 +472,26 @@ watch(
     applyVersionCheck();
     autoSelectFiles();
   }
+);
+
+// 监听外部文件变化
+watch(
+  () => ({ file: props.externalFile, enabled: props.useExternalFile }),
+  async ({ file, enabled }) => {
+    if (enabled && file) {
+      if (!isFileAllowed(file)) {
+        emitError(`只允许 ${acceptExtensions.value} 格式`);
+        return;
+      }
+      if (file.size > config.value.maxFileSize) {
+        emitError(`文件大小不能超过 ${formatSize(config.value.maxFileSize)}`);
+        return;
+      }
+      uploadedZip.value = file;
+      await parseZipFile(file);
+    }
+  },
+  { immediate: true }
 );
 
 onUnmounted(clearAll);
@@ -497,12 +528,23 @@ onUnmounted(clearAll);
     position: relative;
     overflow: hidden;
 
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     p {
       font-size: 14px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding-right: 40px;
+    }
+
+    .external-file-tip {
+      color: #409eff;
+      font-size: 12px;
+      margin-left: 8px;
     }
 
     .upload-icon {
@@ -536,6 +578,10 @@ onUnmounted(clearAll);
       z-index: 99;
       opacity: 0;
       cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
     }
 
     &:hover,

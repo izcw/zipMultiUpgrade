@@ -77,6 +77,18 @@ parseRuleAndVersion: (fileName) => {
 }
 ```
 
+### Props 配置项(use-external-file)
+
+| 类型       | 默认值         | 说明                          |
+| ---------- | ------------- | ---------------------         |
+| `Boolean`   | `false`   | 是否使用外部文件  |
+
+### Props 配置项(external-file)
+
+| 类型       | 默认值         | 说明                          |
+| ---------- | ------------- | ---------------------         |
+| `File`   | `null`   | 外部传入的文件  |
+
 ### 事件回调
 
 | 事件名         | 返回值                                              | 说明            |
@@ -115,11 +127,14 @@ parseRuleAndVersion: (fileName) => {
 | 参数名             | 类型               | 默认值     | 说明          |
 | :---------------- | :----------------- | :-------- | :---------- |
 | `fontSize`        | `number \| string` | `12`      | 日志字体大小      |
+| `ListHeight`      | `Number`           | `120`     | 列表的可视高度（超出部分滚动显示）  |
 | `showProgressBar` | `Boolean`          | `true`    | 是否显示进度条     |
 | `showLog`         | `Boolean`          | `true`    | 是否显示日志      |
 | `showTimestamp`   | `Boolean`          | `true`    | 是否显示时间戳     |
 | `autoScroll`      | `Boolean`          | `true`    | 是否自动滚动到最新日志 |
 | `progressColor`   | `String`           | `#409EFF` | 进度条颜色       |
+| `progresshigh`    | `String`           | `20`      | 进度条高度       |
+| `progressRadius`  | `String`           | `10`      | 进度条圆角       |
 
 ### 方法 (ref 调用)
 

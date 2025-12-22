@@ -3,7 +3,13 @@
   <div class="progress-log-section">
     <!-- 进度条 -->
     <div class="progress-container" v-if="config.showProgressBar">
-      <div class="progress-bar">
+      <div
+        class="progress-bar"
+        :style="{
+          height: config.progresshigh + 'px',
+          borderRadius: config.progressRadius + 'px',
+        }"
+      >
         <div class="progress-text">{{ progress }}%</div>
         <div
           class="progress-fill"
@@ -21,7 +27,13 @@
       ref="logContainer"
       class="log-container"
       v-if="config.showLog"
-      :style="rootStyle"
+      :style="[
+        rootStyle,
+        {
+          height: config.ListHeight + 'px',
+          maxHeight: config.ListHeight + 'px',
+        },
+      ]"
     >
       <div
         v-for="(log, i) in logs"
@@ -51,11 +63,14 @@ const props = defineProps({
 // 默认配置
 const defaultConfig = {
   fontSize: 12, // 字体大小
+  ListHeight: 120, // 列表高度
   showProgressBar: true, // 是否显示进度条
   showLog: true, // 是否显示日志
   showTimestamp: true, //是否在日志前显示时间戳
   autoScroll: true, // 是否自动滚动到最新日志
   progressColor: "#3491fa", // 进度条颜色
+  progresshigh: 20, // 进度条高度
+  progressRadius: 10, // 进度条圆角
 };
 
 // 合并配置
@@ -176,9 +191,7 @@ onUnmounted(() => stopCountdown());
 }
 .progress-bar {
   width: 100%;
-  height: 20px;
   background: #bfbfbf;
-  border-radius: 10px;
   position: relative;
   overflow: hidden;
 }
@@ -226,8 +239,6 @@ onUnmounted(() => stopCountdown());
   }
 }
 .log-container {
-  height: 120px;
-  max-height: 120px;
   overflow-y: auto;
   padding: 5px;
   box-sizing: border-box;
