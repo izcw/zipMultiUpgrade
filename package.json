@@ -19,7 +19,6 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "dev": "vite",
     "build": "vite build --mode lib",
     "build:watch": "vite build --mode lib --watch"
   },

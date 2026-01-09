@@ -177,7 +177,7 @@ defineExpose({
 });
 
 onMounted(() => clear());
-onUnmounted(() => stopCountdown());
+onUnmounted(() => clear());
 </script>
 
 <style scoped lang="scss">

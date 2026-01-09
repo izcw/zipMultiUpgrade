@@ -40,9 +40,9 @@
           </p>
           <p v-else>Click to upload</p>
           <!-- 显示外部文件模式提示 -->
-          <p v-if="useExternalFile" class="external-file-tip">（外部文件模式）</p>
+          <!-- <p v-if="useExternalFile" class="external-file-tip">（外部文件模式）</p> -->
         </div>
-        <div class="delete-icon" v-if="uploadedZip" @click="clearAll">
+        <div class="delete-icon" v-if="uploadedZip && !useExternalFile" @click="clearAll">
           <slot name="deleteIcon">
             <div class="default-icon">
               <svg
