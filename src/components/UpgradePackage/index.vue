@@ -42,7 +42,11 @@
           <!-- 显示外部文件模式提示 -->
           <!-- <p v-if="useExternalFile" class="external-file-tip">（外部文件模式）</p> -->
         </div>
-        <div class="delete-icon" v-if="uploadedZip && !useExternalFile" @click="clearAll">
+        <div
+          class="delete-icon"
+          v-if="uploadedZip && !useExternalFile"
+          @click="clearAll"
+        >
           <slot name="deleteIcon">
             <div class="default-icon">
               <svg
@@ -114,8 +118,11 @@ const defaultConfig = {
   currentVersions: [], // 当前设备版本列表，用于比对
   // 自定义版本及规则解析
   parseVersionRule: (fileName) => {
-    const baseName = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, ""); // 1. 移除文件扩展名
-    const ruleMatch = baseName.match(/_#([^_]+)$/); // 2. 提取规则（从最后一段匹配 # 开头的内容）
+    // 1. 移除文件扩展名
+    const baseName = fileName.replace(/\.[A-Za-z0-9]{1,5}$/i, "");
+
+    // 2. 提取规则（格式：_#XXX#）
+    const ruleMatch = baseName.match(/_#([^#]+)#$/);
     const rule = ruleMatch?.[1] || null;
 
     // 3. 移除规则部分，准备匹配版本号
@@ -123,8 +130,10 @@ const defaultConfig = {
       ? baseName.slice(0, -ruleMatch[0].length)
       : baseName;
 
-    const versionMatch = withoutRule.match(/_v?(\d+\.\d+\.\d+)$/i); // 4. 提取版本号（匹配倒数第二段的 v1.2.3格式 并截取掉v）
+    // 4. 提取版本号（格式：[v1.0.0]）
+    const versionMatch = withoutRule.match(/\[\s*v(\d+\.\d+\.\d+)\s*\]$/);
     const version = versionMatch?.[1] || null;
+
     return { version, rule };
   },
 };
@@ -240,7 +249,7 @@ const handleFileSelect = async (e) => {
     emitError("当前正在使用外部文件，无法手动上传");
     return;
   }
-  
+
   const file = e.target.files[0];
   if (!file) return;
 
@@ -340,15 +349,19 @@ const applyVersionCheck = () => {
     fileList.value.forEach((f) => (f.needUpgrade = true));
     return;
   }
-
+  // console.log("应用版本检查");
+  // console.log(fileList.value);
+  
   fileList.value.forEach((file) => {
     const cur = config.value.currentVersions.find(
       (v) =>
-        v.namingformat?.toString().toUpperCase() ===
-          file.rule?.toString().toUpperCase() &&
-        v.suffix?.toString().toUpperCase() ===
-          file.ext?.toString().toUpperCase()
+      v.namingformat?.toString().toUpperCase() ===
+      file.rule?.toString().toUpperCase() &&
+      v.suffix?.toString().toUpperCase() ===
+      file.ext?.toString().toUpperCase()
     );
+
+
     if (!cur || !cur.version) {
       file.needUpgrade = true;
       file.curVersion = null;

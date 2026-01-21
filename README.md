@@ -45,7 +45,7 @@ import { UpgradePackage, ProgressLog } from "zip-multi-upgrade";
 | `maxFileSize`         | `Number`   | `10 * 1024 * 1024` (10MB)  | 上传 ZIP 最大体积  |
 | `priorityRules`       | `Array`    | `[]`          | 文件匹配规则配置                 |
 | `currentVersions`     | `Array`    | `[]`          | 当前设备版本信息（用于比对）    |
-| `parseVersionRule` | `Function` | 内置解析函数      | 自定义文件名版本号解析规则 (默认解析：`_v1.0.0_#SWITCH.bin` `_v版本_规则.后缀`)|
+| `parseVersionRule` | `Function` | 内置解析函数      | 自定义文件名版本号解析规则 (默认解析：`[v1.x.x]_#MCU#.bin` `_v版本_规则.后缀`)|
 
 #### priorityRules 匹配规则配置
 
@@ -219,7 +219,7 @@ function onFilesSelected(val) {
 #### 构建打包
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 #### 首次使用需登录
@@ -231,7 +231,7 @@ npm login
 #### 发布到 npm
 
 ```bash
-npm publish --access=public
+pnpm publish --access=public
 ```
 
 #### 本地调试
@@ -239,15 +239,15 @@ npm publish --access=public
 在 npm 包项目中
 
 ```bash
-npm link            # 创建本地软链接（在组件项目中执行）
-npm run build:watch # 监听模式构建
+pnpm link            # 创建本地软链接（在组件项目中执行）
+pnpm run build:watch # 监听模式构建
 # npm unlink        # 取消链接
 ```
 
 在使用项目中：
 
 ```bash
-npm link zip-multi-upgrade # 链接到本地包
+pnpm link zip-multi-upgrade # 链接到本地包
 ```
 
 ### 二、本地引用方式
@@ -255,7 +255,7 @@ npm link zip-multi-upgrade # 链接到本地包
 #### 构建打包
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ```javascript

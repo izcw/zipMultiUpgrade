@@ -34,9 +34,20 @@
           @change="$emit('toggle-check', file)"
         />
         <span class="item-index">{{ index + 1 }}</span>
-        <span class="item-name" :title="file.name">{{
+        <p class="item-name" v-if="file.version">
+          {{ file.rule }}
+          &nbsp;
+          <span
+            :style="{
+              color: file.version > file.curVersion ? 'green' : '',
+            }"
+            >v{{ file.version }}</span
+          >
+        </p>
+
+        <!-- <span class="item-name" :title="file.name">{{
           file.shortName || file.name
-        }}</span>
+        }}</span> -->
       </div>
     </div>
   </div>
@@ -51,6 +62,9 @@ const props = defineProps({
 });
 
 defineEmits(["toggle-check"]);
+
+console.log("传来的文件");
+console.log(props.files);
 
 const isChecked = (file) => {
   return props.checkedFiles.includes(file);
